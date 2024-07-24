@@ -8,7 +8,7 @@ from langchain_core.prompts import PromptTemplate
 from constants import *
 from gather_info_whereigo import persist_directory, embeddings
 
-llm = Ollama(model="phi3", temperature=0.1)
+llm = Ollama(model="llama3", temperature=0.1)
 
 db = Chroma(persist_directory=persist_directory,
             embedding_function=embeddings)
@@ -16,7 +16,8 @@ db = Chroma(persist_directory=persist_directory,
 retriever = db.as_retriever(search_kwargs={"k": N_DOCUMENTS})
 
 template = """You are gonna receive as input a time slot and a day, together with a tag that describes the said time slot.
-You got to return the activity that you consider the most suited for that time slot and day, among the ones that follow:
+You got to return the activity that you consider the most suited for that time slot and day, among the ones that will follow.
+Return only the id of the selected activity, without any other information or motivation. The only text present in the answer must be the id of the activity.
 
 {context}
 
@@ -31,8 +32,8 @@ def get_answer(q):
     ])
     llm_chain = LLMChain(llm=llm, prompt=QA_CHAIN_PROMPT, callbacks=None)
     prompt = PromptTemplate(
-        input_variables=["page_content"],
-        template="Context:\ncontent:{page_content}",
+        input_variables=["page_content", "id"],
+        template="Context:\ncontent:{page_content}\nid:{id}\n",
     )
     combine_documents_chain = StuffDocumentsChain(
         llm_chain=llm_chain,
@@ -44,7 +45,7 @@ def get_answer(q):
                            retriever=retriever,
                            return_source_documents=True)
 
-    print(qa_chain.invoke(q))
+    print(qa_chain.invoke(q)['result'])
     # process_llm_response(qa_chain.invoke(q)['result'])
 
 
