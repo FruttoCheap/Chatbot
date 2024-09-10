@@ -6,9 +6,9 @@ from langchain_community.vectorstores import Chroma
 
 website = ""
 
-persist_directory = "./chroma/chroma_SE"
+persist_directory = "./chroma/chroma_sys"
 
-text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=50)
+text_splitter = CharacterTextSplitter(chunk_size=50, chunk_overlap=0)
 
 embeddings = HuggingFaceEmbeddings()
 
@@ -151,6 +151,7 @@ def plain_to_text(file_path):
 
 def collect_files(file):
     entries = [file + "/" + f for f in os.listdir(file)]
+    print(entries)
     if not entries:
         return
 
@@ -160,7 +161,7 @@ def collect_files(file):
                 continue
             # document formats
             elif f.endswith(".pdf"):
-                pdf_to_text(str(file) + "/" + f)
+                pdf_to_text(f)
             elif os.path.splitext(f)[1] in office_extensions:
                 embed(f, office_to_text(f))
             elif f.endswith(".csv"):

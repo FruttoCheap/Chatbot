@@ -1,53 +1,68 @@
 from langchain.chains import RetrievalQA
-from langchain.chains.combine_documents.stuff import StuffDocumentsChain
-from langchain.chains.llm import LLMChain
-from langchain_community.llms import Ollama
 from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
+from langchain_experimental.llms.ollama_functions import OllamaFunctions
+from pydantic.v1 import BaseModel, Field
 
 from constants import *
 from gather_info_dir import persist_directory, embeddings
 
-llm = Ollama(model="llama3", temperature=0.1)
+
+class LocationDetail(BaseModel):
+    """Select the best machine based on the requested characteristics"""
+
+    name: str = Field(description="The name of the selected machine")
+    characteristics: str = Field(description="The characteristics of the selected machine")
+    production_requirements: str = Field(description="The production requirements of the selected machine")
+
+
+model = OllamaFunctions(
+    model="llama3",
+    keep_alive=-1,
+    format="json",
+    temperature=0.1,
+)
 
 db = Chroma(persist_directory=persist_directory,
             embedding_function=embeddings)
 
 retriever = db.as_retriever(search_kwargs={"k": N_DOCUMENTS})
 
-template = """Use the following pieces of context to answer the question at the end. Please follow the following rules:
-1. If the question is to request references, please only return the source with no answer.
-2. If you don't know the answer, don't try to make up an answer. Just say **I can't find the final answer but you may want to check the following references** and add the sources as a list.
-3. If you find the answer, write the answer in a concise way and add the list of sources that are **directly** used to derive the answer. Exclude the sources that are irrelevant to the final answer.
+template = """You are a chatbot to help choosing the right machine for putting caps on bottles, based on the characteristics of the machine and the production requirements.
+These are the characteristics of the machines:
 
 {context}
 
-Question: {question}"""
+The question you have to answer is:
+
+{question}
+
+Yiu MUST adhere to the following schema:
+MachineInput:
+    string name;
+    string characteristics;
+    string production_requirements;
+Output:
+    string name;"""
+
+
+def get_chain(prompt):
+    structured_llm = model.with_structured_output(LocationDetail)
+    return prompt | structured_llm
+
+
+def get_context(q):
+    response = retriever.invoke(q, k=5)
+    print(response)
+    return response
 
 
 def get_answer(q):
-    # save embedding of the question
-    QA_CHAIN_PROMPT = PromptTemplate(template=template, input_variables=[
-        'context',
-        'question',
-    ])
-    llm_chain = LLMChain(llm=llm, prompt=QA_CHAIN_PROMPT, callbacks=None)
-    prompt = PromptTemplate(
-        input_variables=["page_content"],
-        template="Context:\ncontent:{page_content}",
-    )
-    combine_documents_chain = StuffDocumentsChain(
-        llm_chain=llm_chain,
-        document_variable_name="context",
-        document_prompt=prompt,
-        callbacks=None,
-    )
-    qa_chain = RetrievalQA(combine_documents_chain=combine_documents_chain,
-                           retriever=retriever,
-                           return_source_documents=True)
-
-    print(qa_chain.invoke(q)['result'])
-    # process_llm_response(qa_chain.invoke(q)['result'])
+    prompt = PromptTemplate.from_template(template)
+    chain = get_chain(prompt)
+    context = get_context(q)
+    result = chain.invoke({"question": q, "context": context})
+    return result.name
 
 
 while 1:

@@ -32,32 +32,6 @@ model = OllamaFunctions(
     format="json",
 )
 
-# systemPrompt = """You are a programmatic location recommender. You will receive a list of locations together with an id
-# associated to a given location.
-# Each location MUST adhere to the LocationInput schema: validate them and throw an error if not.
-# Also, you will receive a user question, that MUST follow the UserInput schema, that you must answer based on the
-# locations you received.
-# Considering the UserInput schema, the date and time_slot fields must be used to decide whether a given location is open
-# for the given values, while tag and preferences are meant to help you understand what's the better option
-# among the ones listed.
-#
-# LocationInput:
-#     int id;
-#     string name;
-#     string rating;
-#     string price;
-#     string description;
-#     string opening_hours;
-#     string attributes;
-#     float distance;
-#
-# UserInput:
-#     string date
-#     string time_slot;
-#     string tag;
-#     string preferences;
-# """
-
 systemPrompt = """You are a programmatic location recommender.
 Each location that you receive in the Context MUST adhere to the following schema: 
 id: int, name: string, rating: string, price: string, description: string, opening_hours: string, attributes: string, distance: float.
