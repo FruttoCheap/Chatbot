@@ -1,7 +1,16 @@
-from langchain_community.vectorstores import Chroma
+from datetime import datetime
+
+from fastapi import FastAPI
 from langchain_core.prompts import PromptTemplate
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
+import firebase_admin
+from firebase_admin import firestore
+
+appFirebase = firebase_admin.initialize_app()
+db = firestore.client()
+
+app = FastAPI()
 
 
 class Answer(BaseModel):
@@ -33,9 +42,12 @@ def get_chain(prompt):
 def get_answer(q):
     chain = get_chain(get_prompt())
     result = chain.invoke({"question": q})
-    print(result)
+    return result
 
 
-if __name__ == '__main__':
-    query = input("Query: ")
-    get_answer(query)
+@app.post("/text/")
+def create_item(text: str, uid: str):
+    answer = get_answer(text)
+    time = datetime.now()
+    db.collection("users").document(uid).collection("expenses").add({"price": answer.price, "description": answer.description, "category": answer.category, "time": time})
+    return {""}
