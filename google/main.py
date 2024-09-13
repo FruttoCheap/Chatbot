@@ -145,16 +145,16 @@ questions1ok = [
 ]
 
 newQuestions = [
-    "How much did I spent last month?",
-    "What was my most expensive purchase of all time?",
-    "How much did I spent last year?",
-    "How much did I spent today?",
-    "How much money do I spend on the weekends?",
-    "How much money do I spend during non weekend days?",
-    "In which category I spend the biggest amount of money?",
-    "How much do I spend in the evenings?", #??
-    "How much do I spend in the mornings?", #??
-    "How much did I spend on yoga?", #??
+    "How much did I spent last month?",                                                                                 # ok
+    "What was my most expensive purchase of all time?",                                                                 # ok
+    "How much did I spent last year?",                                                                                  # ok
+    "How much did I spent today?",                                                                                      # ok
+    "How much money do I spend on the weekends?",                                                                       # ok
+    "How much money do I spend during non weekend days?",                                                               # ok
+    "In which category I spend the biggest amount of money?",                                                           # ok
+    "How much do I spend in the evenings?",                                                                             # not ok
+    "How much do I spend in the mornings?",                                                                             # not ok
+    "How much did I spend on yoga?",                                                                                    # not ok, very RAG-like question
 ]
 
 for j in questions1ok + newQuestions:
