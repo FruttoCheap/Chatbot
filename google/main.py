@@ -17,8 +17,6 @@ def get_from_database(printQuestion, printQuery, needToWait, question, db, chain
             question = question + " Need the description AND the price. Use ORDER BY"
     if "items" in question:
         question = question.replace("items", "things")
-    if "category" in question:
-        question = question + " Select only one category."
     if "categories" in question:
         question = question + " Select all distinct categories without limits."
     if "percentage" in question:
@@ -51,11 +49,8 @@ def get_from_database(printQuestion, printQuery, needToWait, question, db, chain
                     continue
         print(result)
 
-
     print("---")
 
-    if (needToWait):
-        sleep(1)
 load_dotenv()
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
@@ -73,7 +68,9 @@ today = datetime.today().strftime('%Y-%m-%d')
 time = datetime.today().strftime('%H:%M:%S')
 cur_year = datetime.now().year
 system = """
-            You are given a database where there are all the items/purchases done by a person. There are also corresponding dates.
+            You are given a database where there are all the items/purchases done by a person. Whatever you do, you must not output the word INTERVAL.
+            Whatever you do, you must not use syntax like date('2024-09-13') - 7 days.
+            Whatever you do, you must not subract to dates.
             - Use SQLITE3 syntax.
             Follow this rules:
             - only query existing tables
@@ -95,7 +92,7 @@ system = """
             - For date comparisons, prefer >= or <=. 
             - If time is given without a date, use only the time. 
             - Use DISTINCT for category queries. 
-            - Questions containing 'from month to month' should have two BETWEEN.
+            - evenings or mornings without date do not care about the date but only about the
             - Output the queries only.
             """
 prompt = ChatPromptTemplate.from_messages(
@@ -146,5 +143,19 @@ questions1ok = [
     "Give me all purchases in 2023.",                                                                                   # ok
     "What is the most frequent purchase day of the week, and how much was spent on that day in total?",                 # ok but weird format
 ]
-for j in questions1ok:
+
+newQuestions = [
+    "How much did I spent last month?",
+    "What was my most expensive purchase of all time?",
+    "How much did I spent last year?",
+    "How much did I spent today?",
+    "How much money do I spend on the weekends?",
+    "How much money do I spend during non weekend days?",
+    "In which category I spend the biggest amount of money?",
+    "How much do I spend in the evenings?", #??
+    "How much do I spend in the mornings?", #??
+    "How much did I spend on yoga?", #??
+]
+
+for j in questions1ok + newQuestions:
     get_from_database(True, True, True, j, db, full_chain, today, time, cur_year)
