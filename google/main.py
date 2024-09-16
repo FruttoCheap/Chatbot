@@ -1,40 +1,38 @@
 import os
+from timeit import default_timer as timer
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 from langchain.chains import create_sql_query_chain
-from time import sleep
 from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 # Function used to elaborate queries
-def get_from_database(printQuestion, printQuery, needToWait, question, db, chain, today, time, cur_year):
-    
-    if "item" in question:
-        question = question.replace("item", "thing")
-        if "expensive" in question:
-            question = question + " Need the description AND the price. Use ORDER BY"
-    if "items" in question:
-        question = question.replace("items", "things")
-    if "categories" in question:
-        question = question + " Select all distinct categories without limits."
-    if "percentage" in question:
-        question = question + " Use divisions/SUM and moltiplication*100."
-    response = chain.invoke({"question": question})
+def get_from_database(printQuestion, printQuery, printDescription, printCorrectedQuery, question, db, chain, correction_chain, today, description_chain):
+    start = timer()
+    if (printQuestion):
+        print(f"Question: {question}")
 
+    response = chain.invoke({"question": question})
     response = response.replace("SQLQuery:", "").replace("```sql", "").replace("```", "").replace("\n",";").strip()
 
-    if (printQuestion):
-        print(question)
-
     if (printQuery):
-        print(response)
+        print(f"Original Query: {response}")
+
+    response = correction_chain.invoke({"query":response, "question":question, "today":today}).strip()
+
+    if (printCorrectedQuery):
+        print(f"Corrected query: {response}")
 
     result = db.run(response[response.find("SELECT"):])
     result = result.replace("[(","").replace(",)]","").replace("(","").replace(")","").replace(",,",",").replace("'","").replace("]","")
 
-    if not result:
+    if (printDescription):
+        queryDescritption = description_chain.invoke({"query":response})
+        print(queryDescritption)
+
+    if not result or result=="None":
         print("No match found.")
     else:
         # rounding decimals to the second place
@@ -48,13 +46,64 @@ def get_from_database(printQuestion, printQuery, needToWait, question, db, chain
                 except ValueError:
                     continue
         print(result)
-
+    
+    
     print("---")
+
+    end = timer()
+
+    return (end-start)
 
 load_dotenv()
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
-# define the chain
+# define the chain that will correct
+
+llm2 = ChatGroq(
+    model="llama3-groq-70b-8192-tool-use-preview",
+    temperature=0,
+    max_retries=2,
+)
+parser = StrOutputParser()
+template = ChatPromptTemplate.from_messages([("system", """You are a SQLite3 query checker. You will receive an SQLite3 query here {query} and correct it syntattically.
+                                              The query should respond to this question: {question} Respond only with the corrected query. 
+                                              Always remove INTERVAL keyword: adjust the date calculations using strftime or date functions supported by SQLite. 
+                                              Never use INTERVAL keyword: adjust the date calculations using strftime or date functions supported by SQLite.
+                                              Never use INTERVAL keyword: adjust the date calculations using strftime or date functions supported by SQLite.
+                                              Never use INTERVAL keyword: adjust the date calculations using strftime or date functions supported by SQLite.
+                                              Correct syntax: date('2024-09-12', '-30 days')
+                                              Correct syntax: date('2024-09-12', '+1 day')
+                                              Correct syntax: date('2024-09-12', '-30 days')
+                                              Correct syntax: date('2024-09-12', '+1 day')
+                                              Correct syntax: date('2024-09-12', '-30 days')
+                                              Correct syntax: date('2024-09-12', '+1 day')
+                                              Correct syntax: date('2024-09-12', '-30 days')
+                                              Correct syntax: date('2024-09-12', '+1 day')
+                                              The table name is expensesok. 
+                                              How much: SUM()
+                                              How much: SUM()
+                                              How much: SUM()
+                                              In which: ORDER BY
+                                              present tense: NO date()
+                                              present tense: NO date()
+                                              You only have columns: price, description, category, timestamp (which include date and time)
+                                              If the date of today is needed, remember that today is {today}. 
+                                              NEVER subract numbers to dates. """)])  
+correction_chain = template | llm2 | parser
+
+# define the description chain
+
+llm3 = ChatGroq(
+    model="llama3-groq-70b-8192-tool-use-preview",
+    temperature=0,
+    max_retries=2,
+)
+parser2 = StrOutputParser()
+template2 = ChatPromptTemplate.from_messages([("system", """You will receive an SQL3 query and a result. You will describe what the query gets to me, as if the database and the query did not exist. I only see the result. The query is {query}. Give a one line result. Don't talk about the result and the query. Template: The search found: (short description of what that query should find).""")])  
+description_chain = template2 | llm3 | parser2
+
+
+# define the chain that will generate
 
 db = SQLDatabase.from_uri("sqlite:///googleDb.sqlite3")
 llm = ChatGroq(
@@ -74,12 +123,12 @@ system = """
             - Use SQLITE3 syntax.
             Follow this rules:
             - only query existing tables
+            - For questions like "How much do I spend in the evenings?" you should output the total spending after 18:00 from the first day. 
+            - If the question is asked in present tense, start from the first day to today.
             - Use current date only if other time is not given.
-            - Month Year: >= <=
+            - For questions like "How much did I spend on yoga?" you the description should contain 'yoga', not be entirely it.
             - The present year is {cur_year}
-            - If you need to subtract time from a date, use a syntax like date('2024-09-12', '-30 days').
             - "What is the least expensive item bought" and similiar requests want the description (yes), not the price (no) 
-            - Don't use the INTERVAL keyword: adjust the date calculations using strftime or date functions supported by SQLite.
             - Don't use BETWEEN: go for direct comparisons.
             - If you need to go in the past, remember that today is {today}.
             - How many: COUNT 
@@ -103,12 +152,12 @@ full_chain = {"query": chain} | validation_chain
 
 # Test Questions
 questions1ok = [                           
-    "How many items I bought in September 2023?",                                                                       # ok hardcoded
-    "Which category has the highest number of purchases on weekends, and what is the total amount spent?",              # ok hardcoded
-    "Which categories have purchases made on weekends?",                                                                # ok hardcoded 
-    "What percentage of total spending is attributed to electronics items?",                                            # ok hardcoded
-    "Which category has the highest average price per item?",                                                           # ok hardcoded
-    "What is the least expensive item bought in the food category?",                                                    # ok hardcoded
+    "How many items I bought in September 2023?",                                                                       # ok
+    "Which category has the highest number of purchases on weekends, and what is the total amount spent?",              # ok
+    "Which categories have purchases made on weekends?",                                                                # ok 
+    "What percentage of total spending is attributed to electronics items?",                                            # ok
+    "Which category has the highest average price per item?",                                                           # ok
+    "What is the least expensive item bought in the food category?",                                                    # ok
     "Which category had the highest increase in spending from September to October?",                                   # not ok
     "What is the most expensive item I bought in the last month, and when did I buy it?",                               # ok
     "What is the total amount spent on entertainment?",                                                                 # ok
@@ -132,7 +181,7 @@ questions1ok = [
     "What is the total number of purchases made between $50 and $100?",                                                 # ok
     "Which three categories have the highest total spending combined?",                                                 # ok
     "What is the distribution of purchases by month and category?",                                                     # ok
-    "What is the average price difference between fashion and electronics categories?",                                 # ok
+    "What is the average price difference between fashion and electronics categories?",                                 # not ok
     "What is the average spending per transaction made on a Saturday?",                                                 # ok 
     "Which items were purchased in the last week, and what are their respective categories and prices?",                # ok
     "What is the total amount spent on items purchased after 6 PM?",                                                    # ok
@@ -145,17 +194,25 @@ questions1ok = [
 ]
 
 newQuestions = [
-    "How much did I spent last month?",
-    "What was my most expensive purchase of all time?",
-    "How much did I spent last year?",
-    "How much did I spent today?",
-    "How much money do I spend on the weekends?",
-    "How much money do I spend during non weekend days?",
-    "In which category I spend the biggest amount of money?",
-    "How much do I spend in the evenings?", #??
-    "How much do I spend in the mornings?", #??
-    "How much did I spend on yoga?", #??
+    "How much did I spent last month?",                                                                                 # ok
+    "What was my most expensive purchase of all time?",                                                                 # ok
+    "How much did I spent last year?",                                                                                  # ok
+    "How much did I spent today?",                                                                                      # ok
+    "How much money do I spend on the weekends?",                                                                       # not ok
+    "How much money do I spend during non weekend days?",                                                               # ok
+    "In which category I spend the biggest amount of money?",                                                           # ok
+    "How much do I spend in the mornings?",                                                                             # ok
+    "How much do I spend in the evenings?",                                                                             # ok
+    "How much did I spend on yoga?",                                                                                    # ok
 ]
 
+max_time = 0
+total_time = 0
 for j in questions1ok + newQuestions:
-    get_from_database(True, True, True, j, db, full_chain, today, time, cur_year)
+    x = get_from_database(True, True, True, True, j, db, full_chain, correction_chain, today, description_chain)
+    total_time += x
+    if x > max_time:
+        max_time = x
+
+print(f"The maximum time for a result was: {x:.2f} seconds.")
+print(f"The average waiting time was: {(total_time/len(questions1ok+newQuestions)):.2f} seconds.")
