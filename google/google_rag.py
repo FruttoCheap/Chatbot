@@ -32,11 +32,11 @@ def db_to_text():
     con = sqlite3.connect("googleDb.sqlite3")
     cur = con.cursor()
 
-    cur.execute("SELECT * FROM expenses;")
+    cur.execute("SELECT * FROM expensesok;")
     rows = cur.fetchall()
 
     for row in rows:
-        date_obj = datetime.strptime(row[3].split(" ")[0], "%Y-%m-%d")
+        date_obj = datetime.strptime(row[3].split("T")[0], "%Y-%m-%d")
 
         # Extract day, month, and year
         day = date_obj.day
@@ -87,9 +87,9 @@ def get_answer(q):
         return "I'm sorry, I couldn't find any expenses matching your request."
 
 
-while 1:
-    query = input("Query: ")
-    print(get_answer(query))
+# while 1:
+#     query = input("Query: ")
+#     print(get_answer(query))
 
 
-# db_to_text()
+db_to_text()

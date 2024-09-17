@@ -1,5 +1,5 @@
 import os
-
+from langchain_core.tools import tool
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
@@ -18,10 +18,11 @@ class Expense(BaseModel):
 class Output(BaseModel):
     """Outputs the list of expenses coherent with the user's input, taken from the list inside the input."""
 
-    correct_expenses: list[Expense] = Field(description="The list of expenses coherent with the user's input")
+    correct_expenses: list[Expense] = Field(description=""" - The list of expenses coherent with the user's input.
+                                                            - It can be empty.""")
 
 
-load_dotenv()
+load_dotenv()   
 
 persist_directory = "./chroma/expenses"
 
@@ -76,12 +77,16 @@ def get_answer(q):
 
 while 1:
     query = input("Query: ")
-    answer = get_answer(query)
+    context = get_answer(query)
     total = 0
-    for expense in answer.correct_expenses:
+    for expense in context.correct_expenses:
         print(expense)
         total += expense.price
     print(f"Total: {total}")
 
 
 # db_to_text()
+
+
+# primo limite: calcola sempre il totale così e fa sempre le liste: bisognerebbe avere un agente che capisca quando fare cosa    
+# retriever sulle date è quasi completamente inutile

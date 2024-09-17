@@ -1,12 +1,14 @@
 import os
 from timeit import default_timer as timer
 from dotenv import load_dotenv
+from langchain_community.llms import Ollama
 from langchain_community.utilities import SQLDatabase
 from langchain.chains import create_sql_query_chain
 from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+
 
 # Function used to elaborate queries
 def get_from_database(printQuestion, printQuery, printDescription, printCorrectedQuery, question, db, chain, correction_chain, today, description_chain):
@@ -59,11 +61,7 @@ os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
 # define the chain that will correct
 
-llm2 = ChatGroq(
-    model="llama3-groq-70b-8192-tool-use-preview",
-    temperature=0,
-    max_retries=2,
-)
+llm2 = Ollama(model="gemma2:2b")
 parser = StrOutputParser()
 template = ChatPromptTemplate.from_messages([("system", """You are a SQLite3 query checker. You will receive an SQLite3 query here {query} and correct it syntattically.
                                               The query should respond to this question: {question} Respond only with the corrected query. 
@@ -93,11 +91,7 @@ correction_chain = template | llm2 | parser
 
 # define the description chain
 
-llm3 = ChatGroq(
-    model="llama3-groq-70b-8192-tool-use-preview",
-    temperature=0,
-    max_retries=2,
-)
+llm3 = Ollama(model="gemma2:2b")
 parser2 = StrOutputParser()
 template2 = ChatPromptTemplate.from_messages([("system", """You will receive an SQL3 query and a result. You will describe what the query gets to me, as if the database and the query did not exist. I only see the result. The query is {query}. Give a one line result. Don't talk about the result and the query. Template: The search found: (short description of what that query should find).""")])  
 description_chain = template2 | llm3 | parser2
@@ -106,18 +100,16 @@ description_chain = template2 | llm3 | parser2
 # define the chain that will generate
 
 db = SQLDatabase.from_uri("sqlite:///googleDb.sqlite3")
-llm = ChatGroq(
-    model="llama3-groq-70b-8192-tool-use-preview",
-    temperature=0,
-    max_retries=2,
-)
+llm = Ollama(model="gemma2:2b")
 db.run("DROP TABLE IF EXISTS 'EXPENSES';")
 chain = create_sql_query_chain(llm, db)
 today = datetime.today().strftime('%Y-%m-%d')
 time = datetime.today().strftime('%H:%M:%S')
 cur_year = datetime.now().year
 system = """
-            You are given a database where there are all the items/purchases done by a person. Whatever you do, you must not output the word INTERVAL.
+            You are given a database where there are all the items/purchases done by a person. 
+            You only have the columns price, description, category and timestamp (which contains both day and time in isoformat)
+            Whatever you do, you must not output the word INTERVAL.
             Whatever you do, you must not use syntax like date('2024-09-13') - 7 days.
             Whatever you do, you must not subract to dates.
             - Use SQLITE3 syntax.
