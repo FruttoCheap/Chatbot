@@ -61,7 +61,7 @@ os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
 # define the chain that will correct
 
-llm2 = Ollama(model="gemma2:2b")
+llm2 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview")
 parser = StrOutputParser()
 template = ChatPromptTemplate.from_messages([("system", """You are a SQLite3 query checker. You will receive an SQLite3 query here {query} and correct it syntattically.
                                               The query should respond to this question: {question} Respond only with the corrected query. 
@@ -91,7 +91,7 @@ correction_chain = template | llm2 | parser
 
 # define the description chain
 
-llm3 = Ollama(model="gemma2:2b")
+llm3 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview")
 parser2 = StrOutputParser()
 template2 = ChatPromptTemplate.from_messages([("system", """You will receive an SQL3 query and a result. You will describe what the query gets to me, as if the database and the query did not exist. I only see the result. The query is {query}. Give a one line result. Don't talk about the result and the query. Template: The search found: (short description of what that query should find).""")])  
 description_chain = template2 | llm3 | parser2
@@ -100,7 +100,7 @@ description_chain = template2 | llm3 | parser2
 # define the chain that will generate
 
 db = SQLDatabase.from_uri("sqlite:///googleDb.sqlite3")
-llm = Ollama(model="gemma2:2b")
+llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview")
 db.run("DROP TABLE IF EXISTS 'EXPENSES';")
 chain = create_sql_query_chain(llm, db)
 today = datetime.today().strftime('%Y-%m-%d')
