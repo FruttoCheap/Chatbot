@@ -1,51 +1,59 @@
 import os
-
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
-from pydantic.v1 import BaseModel, Field
 from langchain_core.tools import tool
+from langchain.tools.render import render_text_description
+from operator import itemgetter
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+
+def tool_chain(model_output):
+    tool_map = {tool.name: tool for tool in tools}
+    chosen_tool = tool_map[model_output["name"]]
+    return itemgetter("arguments") | chosen_tool
 
 @tool
-def multiply(first_int: int, second_int: int) -> int:
-    """Multiply two integers together."""
-    return first_int * second_int
+def prices_sum(partial_sum: int, second_int: int) -> int:
+    """Sum two integers toghether. Used to calculate the sum of the prices"""
+    return partial_sum * second_int
 
-# class Expense(BaseModel):
-#     """Outputs the structured version of the user input."""
+@tool
+def count_entries(partial_sum: int) -> int:
+    """Adds 1 to the partial_sum for each row found"""
+    return partial_sum + 1
 
-#     price: float = Field(description="The sum of money spent by the user")
-#     description: str = Field(description="A short description of the user's expense")
-
-
-# class Output(BaseModel):
-#     """Outputs the list of expenses coherent with the user's input, taken from the list inside the input."""
-
-#     correct_expenses: list[Expense] = Field(description="The list of expenses coherent with the user's input")
-
-
+# Environment variables
 load_dotenv()
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
+# Define user question
+# question = input("Question: ")
+question = "How much I spent in purses?"
+
+# Vectorial search for context
 persist_directory = "./chroma/expenses"
-
 embeddings = OllamaEmbeddings(model="mxbai-embed-large")
-
 db = Chroma(persist_directory=persist_directory,
             embedding_function=embeddings)
-
 retriever = db.as_retriever(search_kwargs={"k": 20})
+response = retriever.invoke(question)
+context = ''.join([s.page_content + '; ' for s in response])
 
-template = """Context: {context}. Question: {question}"""
+# Define chain 
+tools = [prices_sum, count_entries]
+rendered_tools = render_text_description(tools)
+system_prompt = f"""You are an assistant that has access to the following set of tools. Here are the names and descriptions for each tool:
+                    {rendered_tools}
+                    The context you can take your information is:
+                    {context}
+                    Given the user input, return the function name and arguments of the tool to use. Return your response as a JSON blob with 'name' and 'arguments' keys.
+                    REPLY ONLY WITH CORRECT JSON in the format {{"name": "toolname", "arguments: {{"arg1": int, "arg2":int}}}}"""
 
-# model = OllamaFunctions(
-#     model="llama3.1",
-#     keep_alive=-1,
-#     format="json",
-# )
-
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+prompt = ChatPromptTemplate.from_messages(
+    [("system", system_prompt), ("user", "{input}")]
+)
 
 model = ChatGroq(
     model="llama3-groq-70b-8192-tool-use-preview",
@@ -53,40 +61,11 @@ model = ChatGroq(
     max_retries=2,
 )
 
-# my_account_id = os.getenv("CF_ACCOUNT_ID")
-# my_api_token = os.getenv("CF_API_KEY")
-# model = CloudflareWorkersAI(account_id=my_account_id, api_token=my_api_token)
+chain = prompt | model | JsonOutputParser() | tool_chain
 
-
-def get_chain(prompt):
-    model_with_tools = model.with_structured_output(Output)
-    return prompt | model_with_tools
-
-
-def get_context(q):
-    response = retriever.invoke(q)
-    return ''.join([s.page_content + '; ' for s in response])
-
-
-def get_answer(q):
-    chain = get_chain(PromptTemplate.from_template(template))
-    context = get_context(q)
-    print(context)
-    try:
-        return chain.invoke({"context": context, "question": q})
-    except Exception as e:
-        print(e)
-        return "I'm sorry, I couldn't find any expenses matching your request."
-
-
-while 1:
-    query = input("Query: ")
-    answer = get_answer(query)
-    total = 0
-    for expense in answer.correct_expenses:
-        print(expense)
-        total += expense.price
-    print(f"Total: {total}")
-
+# User interaction 
+print(context)
+res = chain.invoke({"input": question})
+print(res)
 
 # db_to_text()
