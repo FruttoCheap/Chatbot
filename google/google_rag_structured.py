@@ -1,28 +1,32 @@
 import os
-from langchain_core.tools import tool
+
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from pydantic.v1 import BaseModel, Field
+from langchain_core.tools import tool
+
+@tool
+def multiply(first_int: int, second_int: int) -> int:
+    """Multiply two integers together."""
+    return first_int * second_int
+
+# class Expense(BaseModel):
+#     """Outputs the structured version of the user input."""
+
+#     price: float = Field(description="The sum of money spent by the user")
+#     description: str = Field(description="A short description of the user's expense")
 
 
-class Expense(BaseModel):
-    """Outputs the structured version of the user input."""
+# class Output(BaseModel):
+#     """Outputs the list of expenses coherent with the user's input, taken from the list inside the input."""
 
-    price: float = Field(description="The sum of money spent by the user")
-    description: str = Field(description="A short description of the user's expense")
-
-
-class Output(BaseModel):
-    """Outputs the list of expenses coherent with the user's input, taken from the list inside the input."""
-
-    correct_expenses: list[Expense] = Field(description=""" - The list of expenses coherent with the user's input.
-                                                            - It can be empty.""")
+#     correct_expenses: list[Expense] = Field(description="The list of expenses coherent with the user's input")
 
 
-load_dotenv()   
+load_dotenv()
 
 persist_directory = "./chroma/expenses"
 
@@ -77,16 +81,12 @@ def get_answer(q):
 
 while 1:
     query = input("Query: ")
-    context = get_answer(query)
+    answer = get_answer(query)
     total = 0
-    for expense in context.correct_expenses:
+    for expense in answer.correct_expenses:
         print(expense)
         total += expense.price
     print(f"Total: {total}")
 
 
 # db_to_text()
-
-
-# primo limite: calcola sempre il totale così e fa sempre le liste: bisognerebbe avere un agente che capisca quando fare cosa    
-# retriever sulle date è quasi completamente inutile
