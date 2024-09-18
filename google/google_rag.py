@@ -1,11 +1,17 @@
 from datetime import datetime
-
 from langchain_chroma import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 from langchain_text_splitters import CharacterTextSplitter
 from pydantic.v1 import BaseModel, Field
+import shutil
+import os
+
+def clear_chroma(persist_directory):
+    """Delete the Chroma directory to clear all existing data."""
+    if os.path.exists(persist_directory):
+        shutil.rmtree(persist_directory)
 
 persist_directory = "./chroma/expenses"
 
@@ -26,9 +32,9 @@ retriever = db.as_retriever(search_kwargs={"k": 5})
 
 template = """Context: {context}. Question: {question}"""
 
-
 def db_to_text():
     import sqlite3
+    clear_chroma(persist_directory)  # Clear existing data
     con = sqlite3.connect("googleDb.sqlite3")
     cur = con.cursor()
 
@@ -36,12 +42,15 @@ def db_to_text():
     rows = cur.fetchall()
 
     for row in rows:
-        date_obj = datetime.strptime(row[3].split("T")[0], "%Y-%m-%d")
+        # Adjust date format to include time
+        date_time_str = row[3]  # Assuming row[3] contains the full datetime string
+        date_time_obj = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
 
-        # Extract day, month, and year
-        day = date_obj.day
-        month = date_obj.strftime("%B")
-        year = date_obj.year
+        # Extract day, month, year, and hour
+        day = date_time_obj.day
+        month = date_time_obj.strftime("%B")
+        year = date_time_obj.year
+        hour = date_time_obj.strftime("%H:%M:%S")  # Format hour and minute
 
         if 4 <= day <= 20 or 24 <= day <= 30:
             suffix = "th"
@@ -50,15 +59,15 @@ def db_to_text():
 
         ordinal_day = f"{day}{suffix}"
 
-        embed(row[1], "Price: " + str(row[0]) + ", Description: " + row[1] + ", Date: " + f"{ordinal_day} {month} {year}")
-
+        # Include hour in the text
+        text = f"Price: {row[0]}, Description: {row[1]}, Date: {ordinal_day} {month} {year} {hour}"
+        embed(row[1], text)
 
 def embed(description, text):
     texts = text_splitter.split_text(text)
     if texts:
         Chroma.from_texts([t for t in texts], embeddings, persist_directory=persist_directory,
                           metadatas=[{"row": description}])
-
 
 def get_chain(prompt):
 
@@ -70,11 +79,9 @@ def get_chain(prompt):
 
     return prompt | model.with_structured_output(Output)
 
-
 def get_context(q):
     response = retriever.invoke(q)
     return ''.join([s.page_content + '; ' for s in response])
-
 
 def get_answer(q):
     prompt = PromptTemplate.from_template(template)
@@ -86,10 +93,9 @@ def get_answer(q):
         print(e)
         return "I'm sorry, I couldn't find any expenses matching your request."
 
+# Run the data import and processing
+# db_to_text()
 
-# while 1:
-#     query = input("Query: ")
-#     print(get_answer(query))
-
-
-db_to_text()
+# Example query
+# query = "How much did I spend on dining?"
+# print(get_answer(query))
