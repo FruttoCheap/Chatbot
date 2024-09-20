@@ -5,13 +5,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_experimental.llms.ollama_functions import OllamaFunctions
 from langchain_text_splitters import CharacterTextSplitter
 from pydantic.v1 import BaseModel, Field
-import shutil
 import os
-
-def clear_chroma(persist_directory):
-    """Delete the Chroma directory to clear all existing data."""
-    if os.path.exists(persist_directory):
-        shutil.rmtree(persist_directory)
 
 persist_directory = "./chroma/expenses"
 
@@ -34,13 +28,11 @@ template = """Context: {context}. Question: {question}"""
 
 def db_to_text():
     import sqlite3
-    clear_chroma(persist_directory)  # Clear existing data
     con = sqlite3.connect("googleDb.sqlite3")
     cur = con.cursor()
 
     cur.execute("SELECT * FROM expensesok;")
     rows = cur.fetchall()
-
     for row in rows:
         # Adjust date format to include time
         date_time_str = row[3]  # Assuming row[3] contains the full datetime string
@@ -60,7 +52,7 @@ def db_to_text():
         ordinal_day = f"{day}{suffix}"
 
         # Include hour in the text
-        text = f"Price: {row[0]}, Description: {row[1]}, Date: {ordinal_day} {month} {year} {hour}"
+        text = f"{row[0]} {row[1]} {row[2]}"
         embed(row[1], text)
 
 def embed(description, text):
@@ -94,7 +86,7 @@ def get_answer(q):
         return "I'm sorry, I couldn't find any expenses matching your request."
 
 # Run the data import and processing
-# db_to_text()
+db_to_text()
 
 # Example query
 # query = "How much did I spend on dining?"
