@@ -99,7 +99,7 @@ def select_most_expensive(context: list) -> str:
     index = prices.index(max_price)
     return items[index]
 
-def RAG(question, db, model, rendered_tools, printScores, printChunks, printSmallestChunk, printQuestion, printContext=True, eps=35, min_samples=1, k_size=sys.maxsize, threshold=0.40) -> None:
+def RAG(question, db, rendered_tools, printScores=False, printChunks=False, printSmallestChunk=False, printQuestion=True, printContext=False, eps=35, min_samples=1, k_size=sys.maxsize, threshold=0.40) -> None:
     start = timer()    
 
     context = db.similarity_search_with_score(question, k=225)
@@ -141,8 +141,6 @@ def RAG(question, db, model, rendered_tools, printScores, printChunks, printSmal
     if (printContext):
         for i in context_new:
             print(i, end="")
-                
-
 
     system_prompt = f"""
                         You are an expert extraction algorithm. Your goal is to extract the relevant information from the context to answer the user's question.
@@ -201,10 +199,11 @@ def RAG(question, db, model, rendered_tools, printScores, printChunks, printSmal
         model="llama3-groq-70b-8192-tool-use-preview",
         temperature=0
     )
+
     prompt_2 = ChatPromptTemplate.from_messages(
-    [("system", system_prompt_tools), ("user", "{input}")]
+        [("system", system_prompt_tools), ("user", "{input}")]
     )
-    final_chain = prompt_2 | model_with_tools |  StrOutputParser() | RunnableLambda(stripOutput) | JsonOutputParser() | tool_chain
+    final_chain = prompt_2 | model_with_tools | StrOutputParser() | RunnableLambda(stripOutput) | JsonOutputParser() | tool_chain
     final_response = final_chain.invoke({"input": question})
     print(f"{final_response}\n\n")
 
@@ -334,7 +333,7 @@ listOfQuestions2 = [
 max_time = 0
 total_time = 0
 for question in listOfQuestions2:
-    x = RAG(question, db, model_1, rendered_tools, False, False, False, True, False)
+    x = RAG(question, db, rendered_tools)
     total_time += x
     if x > max_time:
         max_time = x

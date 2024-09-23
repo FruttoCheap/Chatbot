@@ -34,24 +34,24 @@ def db_to_text():
     cur.execute("SELECT * FROM expensesok;")
     rows = cur.fetchall()
     for row in rows:
-        # Adjust date format to include time
-        date_time_str = row[3]  # Assuming row[3] contains the full datetime string
-        date_time_obj = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
+        # # Adjust date format to include time
+        # date_time_str = row[3]  # Assuming row[3] contains the full datetime string
+        # date_time_obj = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S")
 
-        # Extract day, month, year, and hour
-        day = date_time_obj.day
-        month = date_time_obj.strftime("%B")
-        year = date_time_obj.year
-        hour = date_time_obj.strftime("%H:%M:%S")  # Format hour and minute
+        # # Extract day, month, year, and hour
+        # day = date_time_obj.day
+        # month = date_time_obj.strftime("%B")
+        # year = date_time_obj.year
+        # hour = date_time_obj.strftime("%H:%M:%S")  # Format hour and minute
 
-        if 4 <= day <= 20 or 24 <= day <= 30:
-            suffix = "th"
-        else:
-            suffix = ["st", "nd", "rd"][day % 10 - 1]
+        # if 4 <= day <= 20 or 24 <= day <= 30:
+        #     suffix = "th"
+        # else:
+        #     suffix = ["st", "nd", "rd"][day % 10 - 1]
 
-        ordinal_day = f"{day}{suffix}"
+        # ordinal_day = f"{day}{suffix}"
 
-        # Include hour in the text
+        # # Include hour in the text
         text = f"{row[0]} {row[1]} {row[2]}"
         embed(row[1], text)
 
