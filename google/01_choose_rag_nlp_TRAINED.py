@@ -39,3 +39,8 @@ model.fit(train_data, train_labels, epochs=50, batch_size=16, validation_data=(v
 # Evaluate the model on the validation data
 loss, accuracy = model.evaluate(val_data, val_labels)
 print(f'Validation accuracy: {accuracy:.2f}')
+
+
+# rag 0
+# nlp 1
+# unrelated 2
