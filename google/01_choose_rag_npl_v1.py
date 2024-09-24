@@ -12,9 +12,10 @@ class Classification(BaseModel):
     is_specific: int = Field(description="From 0 to 10, how specific is the question?")
     is_broad: int = Field(description="From 0 to 10, how broad is the question?")
     has_keyword: int = Field(description="From 0 to 10, are there keywords in the question? If there are not, put 0.")
-    is_related_to_personal_finance: int = Field(description="From 0 to 10, how is the question related to the expenses of the user? If it is not, put 0.")
+    is_related_to_personal_finance: int = Field(description="From 0 to 10, how is the question related to the expenses of the user? It is to be considered related if it asks anything about prices or expenses or items purchased. Put 0 if the question is not related to prices, expenses, money or items.")
     NLP_or_RAG: int = Field(description="0 if the question is better suited for RAG queries, 10 if the question is better suited for NLP queries. You can have a value between 0 and 10.")
-
+    is_there_number: int = Field(description="0 if there is no number in the question, 1 if there is.")
+    
 # Environment variables
 load_dotenv()
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
@@ -22,14 +23,17 @@ os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 tagging_prompt = ChatPromptTemplate.from_template("""
             Extract the desired information from the following passage.
             You will classify the passage based on the following criteria:
-
-            1. **is_there_time**: Set to 1 if the passage mentions any time-related information (e.g., dates, months, time ranges), otherwise set to 0.
+            You must put a value in each field.
+                                                  
+            1. **is_there_time**: Set to 1 if the passage mentions any time-related information (e.g., days, weeks, dates, months, time ranges), otherwise set to 0.
             2. **is_specific**: Rate the question's specificity on a scale from 0 to 10, where 0 means the question is very vague, and 10 means it is highly specific.
             3. **is_broad**: Rate the question's breadth on a scale from 0 to 10, where 0 means it is very narrow in scope, and 10 means it is very broad.
             4. **NLP_or_RAG**: Rate from 0 to 10, where 0 means the question is better suited for a RAG query (unstructured text), and 10 means it is better suited for NLP queries (structured data).
             5. **has_keyword**: Rate from 0 to 10, where 0 means there are no keywords in the question, and 10 means there are many keywords.
-            6. **is_related_to_personal_finance**: Rate from 0 to 10, where 0 means the question is not related to personal finance, and 10 means it is highly related to personal finance.
-                                                              
+            6. **is_related_to_personal_finance**: Rate from 0 to 10, where 0 means the question is not related to personal finance, and 10 means it is highly related to personal finance. 
+                                                   It is to be considered related if it asks anything about prices or expenses or items purchased.
+                                                   Put 0 if the question is not related to prices, expenses, money or items.
+            7. **is_there_number**: Set to 1 if there is a number in the question, otherwise set to 0.                                                              
             Passage:
             {input}
             """)
@@ -46,38 +50,39 @@ def get_classification(q):
         print(e)
         return "I'm sorry, I couldn't classify the question."
     
-    print(class_calculed.dict())
+    return class_calculed.dict()
 
 
 listOfQuestions1 = [
+    "Why is the sky blue?",                                                         # ok
     "How much did I spend on yoga?",                                                # ok
     "Find all purchases related to 'fashion' made in September 2023.",              # ok
     "How much did I spend on clothing?",                                            # ok   
     "How much did I spend in 2023?",                                                # ok
     "How much did I spend in 2020?",                                                # ok
-    "How much did I spend while hanging out?",                                      # ok, difficult to say
+    "How much did I spend while hanging out?",                                      # ok
     "On average, how much do I spend daily?",                                       # ok
-    "What was the most expensive item in the 'electronics' category?",              # ok
+    "What was the most expensive item in the 'electronics' category?",              # not ok
     "How much did the leather jacket cost?",                                        # ok
-    "What is the total spent on items in the 'food' category?",                     # ok
-    "List all items purchased in the 'entertainment' category.",                    # ok
+    "What is the total spent on items in the 'food' category?",                     # not ok
+    "List all items purchased in the 'entertainment' category.",                    # not ok
     "How many electronics items were purchased after September 15th, 2023?",        # ok
     "Which purchase was made on 2023-09-21?",                                       # ok   
     "What is the price of the 'designer handbag'?",                                 # ok 
     "How many purchases were made in the 'health' category in October?",            # ok
     "What was the price of the 'fancy dinner'?",                                    # ok
     "What was bought on 2023-10-11?",                                               # ok                   
-    "How many items were purchased in the 'travel' category?",                      # ok
-    "Which item was the cheapest?"                                                  # ok
+    "How many items were purchased in the 'travel' category?",                      # not ok
+    "Which item was the cheapest?"                                                  # not ok, but will work fine
 ]
 
 listOfQuestions2 = [
-    "How many items were bought in the afternoon (12 PM - 6 PM)?",                  # not ok
+    "How many items were bought in the afternoon (12 PM - 6 PM)?",                  # ok
     "How much was spent on 'furniture' items in total?",                            # ok
     "What is the average price of all 'electronics' items?",                        # ok
     "What item was purchased on 2023-10-01?",                                       # ok
-    "What are all the items bought in the 'kitchen' category?",                     # ok
-    "How many purchases were made in the 'automotive' category?",                   # ok
+    "What are all the items bought in the 'kitchen' category?",                     # not ok
+    "How many purchases were made in the 'automotive' category?",                   # not ok
     "What item was bought on 2023-10-13?",                                          # ok
     "Find all items purchased on weekends (Saturday and Sunday).",                  # ok
     "What is the price of the 'new laptop'?",                                       # ok
@@ -90,21 +95,21 @@ listOfQuestions2 = [
     "What was the total spent on the 'weekend trip' and 'suitcase' combined?",      # ok
     "What was the least expensive 'electronics' item?",                             # ok
     "How many purchases were made after 5 PM?",                                     # ok
-    "Which item purchased in September cost exactly 100 units?",                    # ok
+    "Which item purchased in September cost exactly 100 units?",                    # not ok
     "How many 'food' items were bought after September 15th, 2023?",                # ok
     "What is the price of the 'digital camera'?",                                   # ok
     "How many purchases were made in the 'furniture' category?",                    # ok
     "What was bought for 85 units?",                                                # ok
     "How much was spent on the 'tablet' and the 'gaming console' combined?",        # ok
-    "What was the most expensive item purchased in the 'travel' category?",         # ok
+    "What was the most expensive item purchased in the 'travel' category?",         # not ok
     "Find all purchases made in the morning (before 12 PM).",                       # ok
-    "How many items were bought for less than 100 units?",                          # not ok, but easy for NLP
-    "What is the total amount spent on all items?",                                 # not ok, but easy for NLP
+    "How many items were bought for less than 100 units?",                          # not ok
+    "What is the total amount spent on all items?",                                 # not ok
     "Which item in October was purchased for exactly 550 units?",                   # ok
     "What was the price of the 'new set of tires'?",                                # ok
-    "How many items were bought for more than 300 units?",                          # not ok, but easy for NLP
+    "How many items were bought for more than 300 units?",                          # not ok
     "What is the total number of purchases made in October 2023?",                  # ok
-    "What item was bought for 110 units?",                                          # ok
+    "What item was bought for 110 units?",                                          # not ok
     "How much did the 'brand new watch' cost?",                                     # ok
     "What is the price of the 'pair of wireless earbuds'?",                         # ok
     "What was the price of the 'book' bought in October 2023?"                      # ok
@@ -112,5 +117,16 @@ listOfQuestions2 = [
 
 for i in listOfQuestions1 + listOfQuestions2:
     print(i)
-    get_classification(i)
+    res_dict = get_classification(i)
+    print(res_dict)
+
+    if res_dict["is_related_to_personal_finance"] <= 2:
+        print("Not a related question.")
+    elif res_dict["is_there_time"] == 1 or res_dict["is_there_number"] == 1:
+        print("NLP")
+    elif (res_dict["is_specific"] == res_dict["is_broad"]) or res_dict["is_broad"] > 5 or res_dict["NLP_or_RAG"] > 5:
+        print("RAG")
+    else:
+        print("NLP")
+
     print("---")

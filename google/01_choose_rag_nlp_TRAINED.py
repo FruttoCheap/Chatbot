@@ -34,7 +34,7 @@ model = Sequential([
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # Train the model on the training data
-model.fit(train_data, train_labels, epochs=50, batch_size=16, validation_data=(val_data, val_labels))  # Reduced epochs and batch size
+model.fit(train_data, train_labels, epochs=100, batch_size=2, validation_data=(val_data, val_labels))  # Reduced epochs and batch size
 
 # Evaluate the model on the validation data
 loss, accuracy = model.evaluate(val_data, val_labels)
