@@ -1,6 +1,3 @@
-import os
-from time import sleep
-from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from langchain_groq import ChatGroq
@@ -13,7 +10,7 @@ class Classification(BaseModel):
     is_related_to_personal_finance: int = Field(description="From 0 to 10, how is the question related to the expenses of the user? It is to be considered related if it asks anything about prices or expenses or items purchased. Put 0 if the question is not related to prices, expenses, money or items.")
     NLP_or_RAG: int = Field(description="0 if the question is better suited for RAG queries, 10 if the question is better suited for NLP queries. You can have a value between 0 and 10.")
     is_there_number: int = Field(description="0 if there is no explicit number in the question, 1 if there is and explicit number in the question.")
-
+    is_there_category: int = Field(description="0 if the word 'category' is not in the question, 1 if there is the word 'category' in the question.")
 def get_tagging_chain():
     tagging_prompt = ChatPromptTemplate.from_template("""
             Extract the desired information from the following passage.
@@ -28,7 +25,8 @@ def get_tagging_chain():
             6. **is_related_to_personal_finance**: Rate from 0 to 10, where 0 means the question is not related to personal finance, and 10 means it is highly related to personal finance. 
                                                    It is to be considered related if it asks anything about prices or expenses or items purchased.
                                                    Put 0 if the question is not related to prices, expenses, money or items.
-            7. **is_there_number**: Set to 1 only if there an explicit number in the question, otherwise set to 0.                                                              
+            7. **is_there_number**: Set to 1 only if there an explicit number in the question, otherwise set to 0.
+            8. **is_there_category**: Set to 1 only if there is the word 'category' in the question, otherwise set to 0.                                                              
             Passage:
             {input}
             """)
@@ -40,18 +38,20 @@ def get_tagging_chain():
 
     return tagging_chain
 
-def get_classification(question, tagging_chain):
+def get_classification(question, tagging_chain, PRINT_SETTINGS):
     try:
         class_calculed = tagging_chain.invoke({"input": question})
     except Exception:
         return "rejected (exception)"
     
     res_dict = class_calculed.dict()
-    print(res_dict)
+
+    if PRINT_SETTINGS["print_characteristics_of_the_question"]:
+        print(res_dict)
 
     if res_dict["is_related_to_personal_finance"] <= 2:
         return "rejected"
-    elif res_dict["is_there_time"] == 1 or res_dict["is_there_number"] == 1:
+    elif res_dict["is_there_time"] == 1 or res_dict["is_there_number"] == 1 or res_dict["is_there_category"] == 1:
         return "NLP"
     elif (res_dict["is_specific"] == res_dict["is_broad"]) or res_dict["is_broad"] > 5 or res_dict["NLP_or_RAG"] > 5:
         return "RAG"

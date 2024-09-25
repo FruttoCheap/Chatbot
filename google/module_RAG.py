@@ -1,5 +1,4 @@
 import re
-import sys
 import numpy as np
 from timeit import default_timer as timer
 from langchain_chroma import Chroma

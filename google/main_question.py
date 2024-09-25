@@ -9,15 +9,16 @@ URI_DB = "sqlite:///googleDb.sqlite3"
 PERSIST_DIRECTORY = "./chroma/expenses"
 PRINT_SETTINGS = {
     "print_question": False,
-    "print_query": False,
-    "print_description": False,
-    "print_corrected_query": False,
+    "print_query": True,
+    "print_description": True,
+    "print_corrected_query": True,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
     "print_smallest_chunk": False,
     "print_context": False,
-    "print_method": True
+    "print_method": True,
+    "print_characteristics_of_the_question": False
 }
 
 # definition of databases and important variables
@@ -58,7 +59,7 @@ def main():
             exit()
 
         # Choose between RAG, NLP or reject the question
-        method = get_classification(question, tagging_chain)
+        method = get_classification(question, tagging_chain, PRINT_SETTINGS)
 
         # Debug: print the chosen method
         if PRINT_SETTINGS["print_method"]:

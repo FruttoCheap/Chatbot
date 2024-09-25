@@ -34,8 +34,8 @@ def NLP(question, db, chain, correction_chain, description_chain, PRINT_SETTINGS
     result = result.replace("[(","").replace(",)]","").replace("(","").replace(")","").replace(",,",",").replace("'","").replace("]","")
 
     if PRINT_SETTINGS["print_description"]:
-        queryDescritption = description_chain.invoke({"query":response})
-        print(queryDescritption)
+        queryDescription = description_chain.invoke({"query":response})
+        print(queryDescription)
 
     if not result or result=="None":
         return "No match found"
@@ -53,7 +53,7 @@ def NLP(question, db, chain, correction_chain, description_chain, PRINT_SETTINGS
     
     end = timer()
 
-    if PRINT_SETTINGS["printTime"]:
+    if PRINT_SETTINGS["print_time"]:
         print(f"Time: {end-start}")
 
     return result
@@ -67,23 +67,22 @@ def get_NLP_chains(db):
     cur_year = datetime.now().year
     system = """
                 You are given a database where there are all the items/purchases done by a person. 
-                You only have the columns price, description, category and timestamp (which contains both day and time in isoformat)
+                You only have the columns price, description, category, and timestamp (which contains both day and time in isoformat).
                 Whatever you do, you must not output the word INTERVAL.
                 Whatever you do, you must not use syntax like date('2024-09-13') - 7 days.
-                Whatever you do, you must not subract to dates.
+                Whatever you do, you must not subtract from dates.
                 - Use SQLITE3 syntax.
-                Follow this rules:
-                - only query existing tables
+                Follow these rules:
                 - For questions like "How much do I spend in the evenings?" you should output the total spending after 18:00 from the first day. 
                 - If the question is asked in present tense, start from the first day to today.
-                - Use current date only if other time is not given.
-                - For questions like "How much did I spend on yoga?" you the description should contain 'yoga', not be entirely it.
-                - The present year is {cur_year}
-                - "What is the least expensive item bought" and similiar requests want the description (yes), not the price (no) 
+                - Use current date only if no other time is given.
+                - For questions like "How much did I spend on yoga?" the description should contain 'yoga', not be entirely it.
+                - The present year is {cur_year}, today is {today}
+                - "What is the least expensive item bought" and similar requests want the description (yes), not the price (no) 
                 - Don't use BETWEEN: go for direct comparisons.
                 - If you need to go in the past, remember that today is {today}.
-                - How many: COUNT 
-                - Questions SIMILIAR TO 'What is the least expensive item' MUST output an item.
+                - How many: COUNT
+                - Questions SIMILAR TO 'What is the least expensive item' MUST output an item.
                 - If there are singular names, the probability of a single row is higher. 
                 - MUST Suppose the year {cur_year}, UNLESS not already given in the question. 
                 - If no year/month/day/time is provided, test all possible year/month/day/time. 
@@ -91,8 +90,7 @@ def get_NLP_chains(db):
                 - Use time only when specified (e.g., 6 PM, 18:00). 
                 - For date comparisons, prefer >= or <=. 
                 - If time is given without a date, use only the time. 
-                - Use DISTINCT for category queries. 
-                - evenings or mornings without date do not care about the date but only about the
+                - Use DISTINCT for category queries.
                 - Output the queries only.
                 """
     prompt = ChatPromptTemplate.from_messages(
@@ -119,7 +117,12 @@ def get_NLP_chains(db):
                                                 Correct syntax: date('2024-09-12', '+1 day')
                                                 Correct syntax: date('2024-09-12', '-30 days')
                                                 Correct syntax: date('2024-09-12', '+1 day')
+                                                Lowest: ORDER BY ASC
+                                                Lowest: ORDER BY ASC
+                                                Lowest: ORDER BY ASC
+                                                If there are words ending in "-est", LIMIT 1.
                                                 The table name is expensesok. 
+                                                "What's the category I spent the lowest?" SELECT "category", SUM("price") AS "total_spent" FROM expensesok GROUP BY "category" ORDER BY "total_spent" DESC LIMIT 1;
                                                 How much: SUM()
                                                 How much: SUM()
                                                 How much: SUM()
