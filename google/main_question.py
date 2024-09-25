@@ -9,14 +9,14 @@ URI_DB = "sqlite:///googleDb.sqlite3"
 PERSIST_DIRECTORY = "./chroma/expenses"
 PRINT_SETTINGS = {
     "print_question": False,
-    "print_query": True,
-    "print_description": True,
+    "print_query": False,
+    "print_description": False,
     "print_corrected_query": True,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
     "print_smallest_chunk": False,
-    "print_context": False,
+    "print_context": True,
     "print_method": True,
     "print_characteristics_of_the_question": False
 }
@@ -67,7 +67,7 @@ def main():
 
         # Run the chosen method
         if method == "rejected":
-            response = "Not a relevant question"
+            response = "The question is not related to personal finance"
         elif method == "rejected (exception)":
             response = "An error occurred. Try again"
         elif method == "NLP":
