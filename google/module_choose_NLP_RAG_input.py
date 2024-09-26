@@ -8,9 +8,11 @@ class Classification(BaseModel):
     is_broad: int = Field(description="From 0 to 10, how broad is the question?")
     has_keyword: int = Field(description="From 0 to 10, are there keywords in the question? If there are not, put 0.")
     is_related_to_personal_finance: int = Field(description="From 0 to 10, how is the question related to the expenses of the user? It is to be considered related if it asks anything about prices or expenses or items purchased. Put 0 if the question is not related to prices, expenses, money or items.")
-    NLP_or_RAG: int = Field(description="0 if the question is better suited for RAG queries, 10 if the question is better suited for NLP queries. You can have a value between 0 and 10.")
+    NLP_or_RAG: int = Field(description="0 if the question is better suited for RAG queries, 1 if the question is better suited for NLP queries. You can have a value between 0 and 10.")
     is_there_number: int = Field(description="0 if there is no explicit number in the question, 1 if there is and explicit number in the question.")
     is_there_category: int = Field(description="0 if the word 'category' is not in the question, 1 if there is the word 'category' in the question.")
+    is_it_question: int = Field(desceiption="1 if the question asks for something in return, 0 if it is just a sentence.")
+
 def get_tagging_chain():
     tagging_prompt = ChatPromptTemplate.from_template("""
             Extract the desired information from the following passage.
@@ -50,7 +52,9 @@ def get_classification(question, tagging_chain, PRINT_SETTINGS):
         print(res_dict)
 
     if res_dict["is_related_to_personal_finance"] <= 2:
-        return "rejected"
+        return "REJECTED"
+    elif res_dict["is_it_question"] == 0:
+        return "INPUT"
     elif res_dict["is_there_time"] == 1 or res_dict["is_there_number"] == 1 or res_dict["is_there_category"] == 1:
         return "NLP"
     elif (res_dict["is_specific"] == res_dict["is_broad"]) or res_dict["is_broad"] > 5 or res_dict["NLP_or_RAG"] > 5:

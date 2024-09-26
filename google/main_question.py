@@ -1,24 +1,28 @@
 import os
+import sqlite3
 from dotenv import load_dotenv
 from module_NLP import get_database, get_NLP_chains, NLP
 from module_RAG import get_embedded_database, RAG, stripOutput
-from module_choose_NLP_RAG import get_tagging_chain, get_classification
+from module_choose_NLP_RAG_input import get_tagging_chain, get_classification
+from module_input import get_input_chain, input_into_database
 
 # Constants for configuration
 URI_DB = "sqlite:///googleDb.sqlite3"
 PERSIST_DIRECTORY = "./chroma/expenses"
+INPUT_DB = "googleDb.sqlite3"
+MAX_DESCRIPTION_LENGTH = 255
 PRINT_SETTINGS = {
     "print_question": False,
     "print_query": False,
     "print_description": False,
-    "print_corrected_query": True,
+    "print_corrected_query": False,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
     "print_smallest_chunk": False,
-    "print_context": True,
+    "print_context": False,
     "print_method": True,
-    "print_characteristics_of_the_question": False
+    "print_characteristics_of_the_question": True
 }
 
 # definition of databases and important variables
@@ -41,11 +45,17 @@ def initialize_rag(persist_directory):
 # main function: it will loop indefinitely on the questions of the user.
 def main():
     """Main function to run the chatbot."""
+
     load_environment_variables()
 
     # Get the classification chain
     tagging_chain = get_tagging_chain()
 
+    # Initialize INPUT
+    connection = sqlite3.connect(INPUT_DB)
+    cursor = connection.cursor()
+    input_chain = get_input_chain()
+    
     # Initialize NLP and RAG
     nlp_db, full_chain, correction_chain, description_chain, k_size = initialize_nlp(URI_DB)
     rag_db = initialize_rag(PERSIST_DIRECTORY)
@@ -66,14 +76,18 @@ def main():
             print(f"Chosen method: {method}.")
 
         # Run the chosen method
-        if method == "rejected":
+        if method == "REJECTED":
             response = "The question is not related to personal finance"
         elif method == "rejected (exception)":
             response = "An error occurred. Try again"
+        elif method == "INPUT":
+            response = input_into_database(question, input_chain, cursor, MAX_DESCRIPTION_LENGTH)
         elif method == "NLP":
             response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
         elif method == "RAG":
             response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+        else:
+            response = "An error occurred while trying to classify the question. Try again"
 
         # Print the response
         print(f"Response: {response}.")
