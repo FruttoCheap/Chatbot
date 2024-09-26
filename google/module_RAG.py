@@ -260,4 +260,3 @@ def get_embedded_database(persist_directory):
 def get_RAG_model():
     model_1 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0, max_retries=2)
     return model_1
-

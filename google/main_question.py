@@ -3,7 +3,7 @@ import sqlite3
 from dotenv import load_dotenv
 from module_NLP import get_database, get_NLP_chains, NLP
 from module_RAG import get_embedded_database, RAG, stripOutput
-from module_choose_NLP_RAG_input import get_tagging_chain, get_classification
+from module_choose_NLP_RAG_input_plot import get_tagging_chain, get_classification
 from module_input import get_input_chain, input_into_database
 
 # Constants for configuration
@@ -15,7 +15,7 @@ PRINT_SETTINGS = {
     "print_question": False,
     "print_query": False,
     "print_description": False,
-    "print_corrected_query": False,
+    "print_corrected_query": True,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
@@ -82,10 +82,19 @@ def main():
             response = "An error occurred. Try again"
         elif method == "INPUT":
             response = input_into_database(question, input_chain, cursor, MAX_DESCRIPTION_LENGTH)
-        elif method == "NLP":
-            response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
-        elif method == "RAG":
-            response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+        elif "|" not in method:
+            if method == "NLP":
+                response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
+            elif method == "RAG":
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+        elif "|" in method:
+            method = method.split("|")
+            if method[0] == "NLP":
+                response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
+                pass # response to plot
+            elif method[0] == "RAG":
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+                pass # response to plot
         else:
             response = "An error occurred while trying to classify the question. Try again"
 
