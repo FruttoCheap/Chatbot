@@ -134,9 +134,9 @@ def stripOutput(received_input):
     out = received_input.replace("<tool_call>","").replace("</tool_call>","").replace("\\n","").replace("'","\"").strip()
     return out
 
-def RAG(question, db, stripOutput, PRINT_SETTINGS, k_size, eps=35, min_samples=1, threshold=0.40) -> None:
+def RAG(question, db, stripOutput, PRINT_SETTINGS, eps=35, min_samples=1, threshold=0.40) -> None:
     start = timer()    
-    context = db.similarity_search_with_score(question, k=k_size)
+    context = db.similarity_search_with_score(question)
     scores = [score for _, score in context]
 
     if PRINT_SETTINGS["print_question"]:

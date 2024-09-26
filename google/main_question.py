@@ -35,8 +35,7 @@ def initialize_nlp(uri_db):
     """Initialize NLP chains and database."""
     nlp_db = get_database(uri_db)
     full_chain, correction_chain, description_chain = get_NLP_chains(nlp_db)
-    k_size = int(nlp_db.run("SELECT COUNT(*) from expensesok;").replace("[(","").replace(",)]",""))
-    return nlp_db, full_chain, correction_chain, description_chain, k_size
+    return nlp_db, full_chain, correction_chain, description_chain
 
 def initialize_rag(persist_directory):
     """Initialize RAG database."""
@@ -57,7 +56,7 @@ def main():
     input_chain = get_input_chain()
     
     # Initialize NLP and RAG
-    nlp_db, full_chain, correction_chain, description_chain, k_size = initialize_nlp(URI_DB)
+    nlp_db, full_chain, correction_chain, description_chain = initialize_nlp(URI_DB)
     rag_db = initialize_rag(PERSIST_DIRECTORY)
 
     while True:
@@ -86,14 +85,14 @@ def main():
             if method == "NLP":
                 response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
             elif method == "RAG":
-                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS)
         elif "|" in method:
             method = method.split("|")
             if method[0] == "NLP":
                 response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
                 pass # response to plot
             elif method[0] == "RAG":
-                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, k_size)
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS)
                 pass # response to plot
         else:
             response = "An error occurred while trying to classify the question. Try again"
