@@ -5,6 +5,7 @@ from module_NLP import get_database, get_NLP_chains, NLP
 from module_RAG import get_embedded_database, RAG, stripOutput
 from module_choose_NLP_RAG_input_plot import get_tagging_chain, get_classification
 from module_input import get_input_chain, input_into_database
+from module_plot import get_plot_model, get_plot_from_all, get_plot_from_RAG
 
 # Constants for configuration
 URI_DB = "sqlite:///googleDb.sqlite3"
@@ -14,15 +15,16 @@ MAX_DESCRIPTION_LENGTH = 255
 PRINT_SETTINGS = {
     "print_question": False,
     "print_query": False,
-    "print_description": False,
-    "print_corrected_query": True,
+    "print_description": True,
+    "print_corrected_query": False,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
     "print_smallest_chunk": False,
     "print_context": False,
-    "print_method": True,
-    "print_characteristics_of_the_question": True
+    "print_method": False,
+    "print_characteristics_of_the_question": False,
+    "print_explaination_plot": True
 }
 
 # definition of databases and important variables
@@ -89,16 +91,16 @@ def main():
         elif "|" in method:
             method = method.split("|")
             if method[0] == "NLP":
-                response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
-                pass # response to plot
+                get_plot_from_all(get_plot_model(), connection, question, PRINT_SETTINGS)
             elif method[0] == "RAG":
-                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS)
-                pass # response to plot
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
+                get_plot_from_RAG(get_plot_model(), response, question, PRINT_SETTINGS)
         else:
             response = "An error occurred while trying to classify the question. Try again"
 
         # Print the response
-        print(f"Response: {response}.")
+        if ("PLT" not in method):
+            print(f"Response: {response}.")
 
 if __name__ == "__main__":
     main()

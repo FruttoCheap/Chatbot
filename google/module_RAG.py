@@ -134,7 +134,7 @@ def stripOutput(received_input):
     out = received_input.replace("<tool_call>","").replace("</tool_call>","").replace("\\n","").replace("'","\"").strip()
     return out
 
-def RAG(question, db, stripOutput, PRINT_SETTINGS, eps=35, min_samples=1, threshold=0.40) -> None:
+def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, min_samples=1, threshold=0.40) -> None:
     start = timer()    
     context = db.similarity_search_with_score(question)
     scores = [score for _, score in context]
@@ -205,6 +205,9 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, eps=35, min_samples=1, thresh
     model_1 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0, max_retries=2)
     chain = prompt_1 | model_1 | StrOutputParser() | RunnableLambda(stripOutput)
 
+    if (is_for_plot):
+        return chain.invoke({"input": question})
+
     # User interaction 
     res = chain.invoke({"input": question})
 
@@ -248,6 +251,7 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, eps=35, min_samples=1, thresh
         print(f"Time: {end-start}")
     
     return final_response
+
 
 def get_embedded_database(persist_directory):
     persist_directory = "./chroma/expenses"
