@@ -54,7 +54,7 @@ def print_all(context: list) -> str:
 @tool
 def no_result(context: list) -> str:
     """Returns a message if there are no results."""
-    return "We were unable to answer your question. Try again"
+    return "No match found."
 @tool
 def select_cheapest(context: list) -> str:
     """Returns the cheapest item from the context."""

@@ -141,7 +141,7 @@ def get_NLP_chains(db):
 
     llm3 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
     parser2 = StrOutputParser()
-    template2 = ChatPromptTemplate.from_messages([("system", """You will receive an SQL3 query and a result. You will describe what the query gets to me, as if the database and the query did not exist. I only see the result. The query is {query}. Give a one line result. Don't talk about the result and the query. Template: The search found: (short description of what that query should find).""")])  
+    template2 = ChatPromptTemplate.from_messages([("system", """You will receive an SQL3 query and a result. You will describe what the query gets to a user that does not know anything about databases, as if the database and the query did not exist. I only see the result. The query is {query}. Give a one line result. Don't talk about the result and the query. Template: The search found: (short description of what that query should find).""")])  
     description_chain = template2 | llm3 | parser2
 
     return full_chain, correction_chain, description_chain
