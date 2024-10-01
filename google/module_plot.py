@@ -29,8 +29,9 @@ def get_plot_from_RAG(llm_plot, search_output, question, PRINT_SETTINGS):
                 'description': description,
                 'category': category
             })
+
+    print(data)
     df = pd.DataFrame(data)
-    
     get_plot(df, question, llm_plot, PRINT_SETTINGS, is_there_time=False)
 
 def get_plot(dataframe, question, llm, PRINT_SETTINGS, is_there_time):
@@ -44,6 +45,7 @@ def get_plot(dataframe, question, llm, PRINT_SETTINGS, is_there_time):
                                             Don't print anything to terminal and don't open newly generated SVG files.
                                             Don't use floats for time.
                                             Only one plot per question.
+                                            Always get a complete legend.
                                             """)
     sdf = SmartDataframe(dataframe, config={"llm": llm})
     if (is_there_time):
@@ -59,14 +61,15 @@ def get_plot(dataframe, question, llm, PRINT_SETTINGS, is_there_time):
                                                  You will be called to plot the correct data, given the question.""",
                                   config={"llm": llm})
     
-    agent.chat(question + """ Create an appropriate very good looking plotly chart using only the relevant data from the database.
-                            Give an SVG file and not a PNG file. 
-                            Make sure everything is visible.
-                            Organize the spaces in a way that everything is readable. You don't have limits.
-                            If you need to display categories, display everything.
-                            Don't use floats for time.
-                            Make the chart very good looking.
-                            Only one plot per question.""")
+    agent.chat(question + """Create an appropriate very good looking plotly chart using only the relevant data from the database.
+                             Give an SVG file and not a PNG file. 
+                             Make sure everything is visible.
+                             Organize the spaces in a way that everything is readable. You don't have limits.
+                             If you need to display categories, display everything.
+                             Don't use floats for time.
+                             Make the chart very good looking.
+                             Only one plot per question.
+                             Always get a complete legend.""")
 
     if (PRINT_SETTINGS["print_explaination_plot"]):
         res = agent.explain()
@@ -74,12 +77,14 @@ def get_plot(dataframe, question, llm, PRINT_SETTINGS, is_there_time):
         system_template = """You will receive a description of the procedure used to extract a plot from the data.
                              You will transform this description as if you were talking to a non-technical user, who only cares about which data got used
                              and about the kind of chart created.
+                             Make the chart very good looking.
                              The only thing you will talk about is what data you chose and what kind of chart you created.
                              Don't talk about databases, SQL, SVG, titles, labels or any technical stuff.
                              Don't talk about what the title and the labels are.
                              Be very short and concise.
                              
                              The description is: {description}"""
+        
         prompt_template = ChatPromptTemplate.from_messages(
                           [("system", system_template), ("user", "{description}")]
                           )

@@ -20,9 +20,9 @@ PRINT_SETTINGS = {
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
-    "print_smallest_chunk": False,
-    "print_context": False,
-    "print_method": False,
+    "print_smallest_chunk": True,
+    "print_context": True,
+    "print_method": True,
     "print_characteristics_of_the_question": False,
     "print_explaination_plot": True
 }
@@ -94,6 +94,7 @@ def main():
                 get_plot_from_all(get_plot_model(), connection, question, PRINT_SETTINGS)
             elif method[0] == "RAG":
                 response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
+                print(response)
                 get_plot_from_RAG(get_plot_model(), response, question, PRINT_SETTINGS)
         else:
             response = "An error occurred while trying to classify the question. Try again"

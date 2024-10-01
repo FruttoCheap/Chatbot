@@ -131,7 +131,7 @@ def get_rendered_tools():
 def stripOutput(received_input):
     if "I'm sorry" in received_input:
         return """{"id": 0, "name": "no_result", "arguments": {"context": [""]}}"""
-    out = received_input.replace("<tool_call>","").replace("</tool_call>","").replace("\\n","").replace("'","\"").strip()
+    out = received_input.replace("<tool_call>","").replace("</tool_call>","").replace("\\n","").replace("'","\"").replace('["', "").replace('"]',"").strip()
     return out
 
 def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, min_samples=1, threshold=0.40) -> None:
@@ -176,6 +176,9 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
         for i in context_new:
             print(i, end="")
 
+    if (is_for_plot):
+        return context_new
+
     system_prompt = f"""
                         You are an expert extraction algorithm. Your goal is to extract the relevant information from the context to answer the user's question.
                         Only extract relevant information from the text. Do not add any new information.
@@ -205,11 +208,11 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
     model_1 = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0, max_retries=2)
     chain = prompt_1 | model_1 | StrOutputParser() | RunnableLambda(stripOutput)
 
-    if (is_for_plot):
-        return chain.invoke({"input": question})
-
     # User interaction 
     res = chain.invoke({"input": question})
+    print(f"response: {res}")
+    if (is_for_plot):
+        return res
 
     rendered_tools = get_rendered_tools() 
     # Define chain 
