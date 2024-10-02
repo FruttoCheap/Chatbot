@@ -5,7 +5,8 @@ from module_NLP import get_database, get_NLP_chains, NLP
 from module_RAG import get_embedded_database, RAG, stripOutput
 from module_choose_NLP_RAG_input_plot import get_tagging_chain, get_classification
 from module_input import get_input_chain, input_into_database
-from module_plot import get_plot_model, get_plot_from_all, get_plot_from_RAG
+from module_plot_SVG import get_plot_model, get_plot_from_all, get_plot_from_RAG
+from module_chartJS import get_data_chain, get_labels_chain, get_type_chain, get_graph_type, get_labels, get_data, write_chart_html
 
 # Constants for configuration
 URI_DB = "sqlite:///googleDb.sqlite3"
@@ -24,7 +25,9 @@ PRINT_SETTINGS = {
     "print_context": False,
     "print_method": False,
     "print_characteristics_of_the_question": False,
-    "print_explaination_plot": True
+    "print_explaination_plot": True,
+    "call_SVG_plot": False,
+    "call_JSON_plot": True
 }
 
 # definition of databases and important variables
@@ -61,6 +64,11 @@ def main():
     nlp_db, full_chain, correction_chain, description_chain = initialize_nlp(URI_DB)
     rag_db = initialize_rag(PERSIST_DIRECTORY)
 
+    # Initialize models for chartJS plot
+    data_chain = get_data_chain()
+    labels_chain = get_labels_chain()
+    type_chain = get_type_chain()
+
     while True:
         # Get the question
         question = input("Enter your question ('X' or 'x' to exit): ")
@@ -88,13 +96,26 @@ def main():
                 response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
             elif method == "RAG":
                 response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS)
-        elif "|" in method:
+        elif PRINT_SETTINGS["call_SVG_plot"]:
             method = method.split("|")
             if method[0] == "NLP":
                 get_plot_from_all(get_plot_model(), connection, question, PRINT_SETTINGS)
             elif method[0] == "RAG":
                 response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
                 get_plot_from_RAG(get_plot_model(), response, question, PRINT_SETTINGS)
+        elif PRINT_SETTINGS["call_JSON_plot"]:
+            method = method.split("|")
+            if method[0] == "NLP":
+                response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
+            elif method[0] == "RAG":
+                response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
+            chart_type = get_graph_type(type_chain, question)
+            print(chart_type)
+            labels = get_labels(labels_chain, question, chart_type, response)
+            print(labels)
+            data = get_data(data_chain, question, chart_type, labels, response)
+            print(data)
+            write_chart_html(chart_type, labels, data)
         else:
             response = "An error occurred while trying to classify the question. Try again"
 

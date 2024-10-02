@@ -1,0 +1,28 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chart.js Example</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <div style="width: 75%; margin: 0 auto;">
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <script>
+            // Data and config from Python
+            const data = {"labels": "Food, Transport, Entertainment, Personal Care", "datasets": [{"label": "test", "data": "{\n  name: print_all\n\n  arguments: {\n    context: [\n      Personal Care\n20.00\n    ]\n  }\n}", "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]};
+            const config = {"type": "pie", "data": {"labels": "Food, Transport, Entertainment, Personal Care", "datasets": [{"label": "test", "data": "{\n  name: print_all\n\n  arguments: {\n    context: [\n      Personal Care\n20.00\n    ]\n  }\n}", "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"responsive": true, "scales": {"y": {"beginAtZero": true}}}};
+
+            // Render the chart
+            const myChart = new Chart(
+                document.getElementById('myChart'),
+                config
+            );
+        </script>
+    </body>
+    </html>
+    
