@@ -15,21 +15,39 @@ def get_plot_from_all(llm_plot, db, question, PRINT_SETTINGS):
     get_plot(all_data, question, llm_plot, PRINT_SETTINGS, is_there_time=True)
 
 def get_plot_from_RAG(llm_plot, search_output, question, PRINT_SETTINGS):
-    lines = search_output.split('\n')
-    pattern = r'(\d+\.\d+)\s+(.+)\s+(\w+)$'
+    print(search_output)
     data = []
-    for line in lines:
-        match = re.match(pattern, line)
-        if match:
-            price = float(match.group(1))
-            description = match.group(2)
-            category = match.group(3)
-            data.append({
-                'price': price,
-                'description': description,
-                'category': category
-            })
-
+    pattern = r'(\d+\.\d+)\s+(.+)\s+(\w+)$'
+    if (type(search_output) == list):
+        for i in search_output:
+            print(f"i: {i}")
+            lines = i.split('\n')
+            for line in lines:
+                match = re.match(pattern, line)
+                if match:
+                    price = float(match.group(1))
+                    description = match.group(2)
+                    category = match.group(3)
+                    data.append({
+                        'price': price,
+                        'description': description,
+                        'category': category
+                    })
+                    print(data)
+    else:
+        lines = search_output.split('\n')
+        for line in lines:
+            print(line)
+            match = re.match(pattern, line)
+            if match:
+                price = float(match.group(1))
+                description = match.group(2)
+                category = match.group(3)
+                data.append({
+                    'price': price,
+                    'description': description,
+                    'category': category
+                })
     print(data)
     df = pd.DataFrame(data)
     get_plot(df, question, llm_plot, PRINT_SETTINGS, is_there_time=False)
