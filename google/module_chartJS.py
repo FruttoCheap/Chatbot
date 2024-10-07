@@ -325,33 +325,51 @@ def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
     }
 
     html_content = f"""
-    <!DOCTYPE html>
+        <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Chart</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }}
+            .chart-container {{
+                width: 75%;
+                margin: 0 auto;
+                background: #fff;
+                padding: 20px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+            }}
+        </style>
     </head>
     <body>
-        <div style="width: 75%; margin: 0 auto;">
+        <div class="chart-container">
             <canvas id="myChart"></canvas>
         </div>
-
-        <script>
+     <script>
             // Data and config from Python
             const data = {data};
-            const config = {json.dumps(config)};
-
-            // Render the chart
+         const config = {json.dumps(config)};
+         // Render the chart
             const myChart = new Chart(
                 document.getElementById('myChart'),
                 config
             );
         </script>
     </body>
-    </html>
-    """
+    </html>"""
 
     with open(filename, 'w') as f:
         f.write(html_content)
+

@@ -1,5 +1,6 @@
 import re
 import numpy as np
+import json
 from timeit import default_timer as timer
 from langchain_chroma import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
@@ -130,8 +131,28 @@ def get_rendered_tools():
 
 def stripOutput(received_input):
     if "I'm sorry" in received_input:
-        return """{"id": 0, "name": "no_result", "arguments": {"context": [""]}}"""
-    out = received_input.replace("<tool_call>","").replace("</tool_call>","").replace("\\n","").replace("'","\"").replace('["','').replace('"]','').replace('"', "").replace(", ", "\n").replace(",","\n").strip()
+        return '{"id": 0, "name": "no_result", "arguments": {"context": [""]}}'
+
+    out = (
+        received_input.replace("<tool_call>", "")
+        .replace("</tool_call>", "")
+        .replace("\\n", "")
+        .replace("'", '"')  # Ensure single quotes are converted to double quotes
+        .strip()
+    )
+
+    # Ensuring the output is in valid JSON format
+    if out:
+        try:
+            json.loads(out)  # Validate JSON format
+        except json.JSONDecodeError:
+            out = out.replace('"', "'")   # Temporary replace for processing
+            out = out.replace(":", '":')  # Ensure colons are followed by a quote
+            out = out.replace(",", ',"')  # Ensure commas are followed by a quote
+            out = out.replace("{", '{"')  # Ensure the opening brace starts the object
+            out = out.replace("}", '"}')  # Ensure the closing brace ends the object
+            out = out.replace("'", '"')   # Finalize to proper double quotes
+
     return out
 
 def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, min_samples=1, threshold=0.40) -> None:
