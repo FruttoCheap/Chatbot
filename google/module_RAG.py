@@ -173,8 +173,12 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
 
 
     if PRINT_SETTINGS["print_context"]:
+        print("Context:")
         for i in context_new:
             print(i, end="")
+
+    if (is_for_plot):
+        return context_new
 
     system_prompt = f"""
                         You are an expert extraction algorithm. Your goal is to extract the relevant information from the context to answer the user's question.
@@ -191,7 +195,7 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
                         Don't print anything that is not in the context.
                         Possible outputs: [list of row and purchases] or [empty list]
                         Return the empty list if you think there is no relevant information.
-
+                        If the following variable is true: {is_for_plot}, don't limit on the amount of information you return.
                         IF YOU THINK YOU CAN'T PERFORM THE TASK, RETURN AN EMPTY LIST.
                         Do not return any information that is not in the context. Just select the row. Don't select only numbers.
                         - Return list of strings
@@ -208,9 +212,6 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
     chain = prompt_1 | model_1 | StrOutputParser() | RunnableLambda(stripOutput)
     
     res = chain.invoke({"input": question})
-
-    if (is_for_plot):
-        return res
     
     # User interaction 
     res = chain.invoke({"input": question})

@@ -6,7 +6,7 @@ from module_RAG import get_embedded_database, RAG, stripOutput
 from module_choose_NLP_RAG_input_plot import get_tagging_chain, get_classification
 from module_input import get_input_chain, input_into_database
 from module_plot_SVG import get_plot_model, get_plot_from_all, get_plot_from_RAG
-from module_chartJS import get_data_chain, get_labels_chain, get_type_chain, get_graph_type, get_labels, get_data, write_chart_html
+from module_chartJS import get_data_chain, get_labels_chain, get_type_chain, get_graph_type, get_labels, get_data_RAG, get_data_NLP, write_chart_html
 
 # Constants for configuration
 URI_DB = "sqlite:///googleDb.sqlite3"
@@ -17,17 +17,20 @@ PRINT_SETTINGS = {
     "print_question": False,
     "print_query": False,
     "print_description": True,
-    "print_corrected_query": False,
+    "print_corrected_query": True,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
-    "print_smallest_chunk": False,
-    "print_context": False,
-    "print_method": False,
-    "print_characteristics_of_the_question": False,
+    "print_smallest_chunk": True,
+    "print_context": True,
+    "print_method": True,
+    "print_characteristics_of_the_question": True,
     "print_explaination_plot": True,
     "call_SVG_plot": False,
-    "call_JSON_plot": True
+    "call_JSON_plot": True,
+    "print_plot_type": True,
+    "print_plot_labels": True,
+    "print_plot_data": True
 }
 
 # definition of databases and important variables
@@ -107,14 +110,15 @@ def main():
             method = method.split("|")
             if method[0] == "NLP":
                 response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
+                chart_type = get_graph_type(type_chain, question, PRINT_SETTINGS)
+                labels = get_labels(labels_chain, question, chart_type, response, PRINT_SETTINGS)
+                data = get_data_NLP(labels, response, PRINT_SETTINGS)
             elif method[0] == "RAG":
                 response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
-            chart_type = get_graph_type(type_chain, question)
-            print(chart_type)
-            labels = get_labels(labels_chain, question, chart_type, response)
-            print(labels)
-            data = get_data(data_chain, question, chart_type, labels, response)
-            print(data)
+                chart_type = get_graph_type(type_chain, question, PRINT_SETTINGS)
+                labels = get_labels(labels_chain, question, chart_type, response, PRINT_SETTINGS)
+                data = get_data_RAG(data_chain, question, chart_type, labels, response, PRINT_SETTINGS)
+
             write_chart_html(chart_type, labels, data)
         else:
             response = "An error occurred while trying to classify the question. Try again"

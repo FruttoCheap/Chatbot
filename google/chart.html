@@ -14,8 +14,8 @@
 
         <script>
             // Data and config from Python
-            const data = {"labels": "Food, Transport, Entertainment, Personal Care", "datasets": [{"label": "test", "data": "{\n  name: print_all\n\n  arguments: {\n    context: [\n      Personal Care\n20.00\n    ]\n  }\n}", "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]};
-            const config = {"type": "pie", "data": {"labels": "Food, Transport, Entertainment, Personal Care", "datasets": [{"label": "test", "data": "{\n  name: print_all\n\n  arguments: {\n    context: [\n      Personal Care\n20.00\n    ]\n  }\n}", "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"responsive": true, "scales": {"y": {"beginAtZero": true}}}};
+            const data = {'labels': ['Automotive', 'Decor', 'Electronics', 'Entertainment', 'Fashion', 'Food', 'Furniture', 'Health', 'Kitchen', 'Sports', 'Travel'], 'datasets': [{'label': 'test', 'data': ['400.0', '115.0', '3425.0', '270.0', '1030.0', '385.0', '295.0', '410.0', '115.0', '100.0', '680.00'], 'backgroundColor': 'rgba(75, 192, 192, 0.2)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
+            const config = {"type": "bar", "data": {"labels": ["Automotive", "Decor", "Electronics", "Entertainment", "Fashion", "Food", "Furniture", "Health", "Kitchen", "Sports", "Travel"], "datasets": [{"label": "test", "data": ["400.0", "115.0", "3425.0", "270.0", "1030.0", "385.0", "295.0", "410.0", "115.0", "100.0", "680.00"], "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"responsive": true, "scales": {"y": {"beginAtZero": true}}}};
 
             // Render the chart
             const myChart = new Chart(

@@ -1,11 +1,11 @@
 import json
 import re
+import ast
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableLambda 
 from langchain_core.tools import tool
 from operator import itemgetter
 from langchain.tools.render import render_text_description
@@ -123,9 +123,11 @@ def get_labels_chain():
     llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
     prompt = PromptTemplate.from_template("""You are an expert at data visualization. You will receive a question from the user, the type of chart to realize and the data to use.
                                              You will have, as data, a list of expenses with the columns price, description, category, and timestamp.
-                                             You will output the labels for the chart.
+                                             You will output only the labels for the chart, not the corresponding values.
                                              Example UserInput: "What is the distribution of expenses by category? Give me the chart."
                                              Example Output: ["Food", "Transport", "Entertainment"]
+                                             Give out the output, not the UserInput.
+                                             Don't create new output, get it from {result_search}.
                                              UserInput: {question}.
                                              Type of chart: {chart_type}.
                                              Data: {result_search}.""")
@@ -136,24 +138,33 @@ def get_labels_chain():
 def get_data_chain():
     llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
     prompt_template = """You are responsible for selecting the correct tool from the following list and specifying the function name and arguments based on the user's question.
-                         Choose the correct tool from the list below, finding the one relevant to the question, and provide the function name and arguments to extract the relevant information from the context.
-                         Here are the tools available and their descriptions:
-                         {rendered_tools}
-                         Your goal:
-                         - Select the correct tool for the task.
-                         - Ensure **every** part of the context is passed to the tools.
-                         - Provide a response in JSON format with 'name' and 'arguments' keys.
-                         - If you believe you don't have enough context, use the no_result tool.
-                         - If a day, month, year or time is mentioned in the input, use the no_result tool.
-                         - If the context is empty, use the no_result tool.
-                         - If "average" or "mean" in context, use the average tool.
-                         Always output a readable JSON format for the JsonOutputParser.
-                         Example output: id: 0 name: total arguments: context: [250.0]"
-                         The argument "context" should always be a list. The rows are divided by a comma.
-                         UserInput: {question}.
-                         Type of chart: {chart_type}.
-                         Labels: {labels}.
-                         Context: {context}."""
+                     Choose the correct tool from the list below, finding the one relevant to the question, and provide the function name and arguments to extract the relevant information from the context.
+                     The number of elements in the lists must be equal to the number of labels.
+                     Here are the tools available and their descriptions:
+                     {rendered_tools}
+                     Your goal:
+                     - Select the correct tool for the task.
+                     - Ensure **every** part of the context is passed to the tools.
+                     - Provide a response in JSON format with 'name' and 'arguments' keys.
+                     - If you believe you don't have enough context, use the no_result tool.
+                     - If a day, month, year or time is mentioned in the input, use the no_result tool.
+                     - If the context is empty, use the no_result tool.
+                     - If "average" or "mean" in context, use the average tool.
+                     Always output a readable JSON format for the JsonOutputParser.
+                     Example output: {{
+                         "id": 0,
+                         "name": "toolname",
+                         "arguments": {{
+                             "context": ["row1, row2, row3"]
+                         }}
+                     }}
+                     The argument "context" should always be a list. The rows are divided by a comma.
+                     UserInput: {question}.
+                     Type of chart: {chart_type}.
+                     Labels: {labels}.
+                     Context: {context}.
+                     Get a value for each label."""
+
 
     # Create a prompt using the ChatPromptTemplate with variables properly mapped
     prompt = ChatPromptTemplate.from_template(
@@ -169,20 +180,104 @@ def get_data_chain():
         context="{context}"
     )
 
-    data_chain = prompt | llm | StrOutputParser() | RunnableLambda(stripOutput) | JsonOutputParser() | tool_chain
+    data_chain = prompt | llm | StrOutputParser()  | JsonOutputParser() | tool_chain
     return data_chain
 
 
-def get_graph_type(type_chain, question):
-    return type_chain.invoke({"question": question})   
+def get_graph_type(type_chain, question, PRINT_SETTINGS):
+    graph_type = type_chain.invoke({"question": question})
+    if (PRINT_SETTINGS["print_plot_type"]):
+        print(f"Graph type: {graph_type}")
+    return graph_type 
 
-def get_labels(lables_chain, question, chart_type, result_search):
-    return lables_chain.invoke({"question": question, "chart_type": chart_type, "result_search": result_search})
+def get_labels(lables_chain, question, chart_type, result_search, PRINT_SETTINGS):
+    labels = lables_chain.invoke({"question": question, "chart_type": chart_type, "result_search": result_search})
+    
+    if (PRINT_SETTINGS["print_plot_labels"]):
+        print(f"Labels: {labels}")
+    
+    # Check if the input is a list-like string
+    if labels.startswith("[") and labels.endswith("]"):
+        # Try to safely evaluate the list-like string
+        try:
+            labels = ast.literal_eval(labels)
+            if (PRINT_SETTINGS["print_plot_labels"]):
+                print(f"Labels: {labels}")
+            return labels
+        except (ValueError, SyntaxError):
+            # Handle invalid list-like strings
+            labels = []
+            if (PRINT_SETTINGS["print_plot_labels"]):
+                print(f"Labels: {labels}")
+            return labels
+    else:
+        # Handle a comma-separated string
+        labels = [label.strip() for label in labels.split(',')]
+        if (PRINT_SETTINGS["print_plot_labels"]):
+            print(f"Labels: {labels}")
+        return labels
 
-def get_data(data_chain, question, chart_type, labels, context):
-    res = data_chain.invoke({"question": question, "chart_type": chart_type, "labels": labels, "context": context, "rendered_tools": get_rendered_tools()})
-    print(res)
-    return res        
+def get_data_RAG(data_chain, question, chart_type, labels, context, PRINT_SETTINGS):
+    data = data_chain.invoke({"question": question, "chart_type": chart_type, "labels": labels, "context": context, "rendered_tools": get_rendered_tools()})
+    if (PRINT_SETTINGS["print_plot_data"]):
+        print(f"Data: {data}")
+
+    # Check if the input is a list-like string
+    if isinstance(data, str) and data.startswith("[") and data.endswith("]"):
+        # Try to safely evaluate the list-like string
+        try:
+            data = ast.literal_eval(data)
+        except (ValueError, SyntaxError):
+            # Handle invalid list-like strings
+            data = []
+    else:
+        # Handle a comma-separated string
+        data = str(data)
+        data = [info.strip() for info in data.split(',')]
+
+    if (len(data) > 1):    
+        # Create a dictionary from the data
+        data_dict = {data[i]: data[i+1] for i in range(0, len(data), 2)}
+
+        # Create an aligned list for the data based on the labels
+        aligned_data = [data_dict.get(label, 0.0) for label in labels]
+        # Print the aligned data
+        return aligned_data
+
+    else:
+        return data
+
+def get_data_NLP(labels, context, PRINT_SETTINGS):
+    # Check if the input is a list-like string
+    if context.startswith("[") and context.endswith("]"):
+        # Try to safely evaluate the list-like string
+        try:
+            context = ast.literal_eval(context)
+        except (ValueError, SyntaxError):
+            # Handle invalid list-like strings
+            context = []
+    else:
+        # Handle a comma-separated string
+        context = [data.strip() for data in context.split(',')]
+
+    if (PRINT_SETTINGS["print_context"]):
+        print(f"Context: {context}")
+
+    if isinstance(context[0], str) and 'T' in context[0]:  # Check for timestamp format (with 'T')
+        # Data contains dates and values
+        data_dict = {entry[:10].strip('"'): context[i+1] for i, entry in enumerate(context) if i % 2 == 0}
+    else:
+        # Data contains simple labels and values
+        data_dict = {context[i].strip('"'): context[i+1] for i in range(0, len(context), 2)}
+
+    # Create an aligned list for the data based on the labels
+    aligned_data = [data_dict.get(label.strip('"').lower(), 0.0) for label in labels]
+
+    if (PRINT_SETTINGS["print_plot_data"]):
+        print(f"Aligned Data: {aligned_data}")
+    return aligned_data
+
+
 def write_chart_html(chart_type, labels, data, label="test", filename="chart.html"):
     data = {
         'labels': labels,
@@ -224,7 +319,7 @@ def write_chart_html(chart_type, labels, data, label="test", filename="chart.htm
 
         <script>
             // Data and config from Python
-            const data = {json.dumps(data)};
+            const data = {data};
             const config = {json.dumps(config)};
 
             // Render the chart
