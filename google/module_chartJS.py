@@ -135,6 +135,23 @@ def get_labels_chain():
     get_labels_chain = prompt | llm | StrOutputParser()
     return get_labels_chain
 
+def get_label_chain():
+    llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
+    prompt = PromptTemplate.from_template("""You are an expert at data visualization. You will receive a question from the user.
+                                            You will understand what the user wants to know and output the label of the y axis.
+                                            
+                                            Example 1:
+                                            UserInput: "What is the distribution of expenses by category? Give me the chart."
+                                            Output: "Total expense"
+                                            
+                                            Example 2:
+                                            UserInput: "Give me a chart that shows how many expenses I did in 2023."
+                                            Output: "Number of expenses"
+                                            UserInput: {question}.""")
+    
+    label_chain = prompt | llm | StrOutputParser()
+    return label_chain
+
 def get_data_chain():
     llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
     prompt_template = """You are responsible for selecting the correct tool from the following list and specifying the function name and arguments based on the user's question.
@@ -278,7 +295,11 @@ def get_data_NLP(labels, context, PRINT_SETTINGS):
     return aligned_data
 
 
-def write_chart_html(chart_type, labels, data, label="test", filename="chart.html"):
+
+def get_label_title(question, model):
+    return model.invoke({"question": question})
+
+def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
     data = {
         'labels': labels,
         'datasets': [{
@@ -309,7 +330,7 @@ def write_chart_html(chart_type, labels, data, label="test", filename="chart.htm
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chart.js Example</title>
+        <title>Chart</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
     <body>

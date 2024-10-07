@@ -6,7 +6,7 @@ from module_RAG import get_embedded_database, RAG, stripOutput
 from module_choose_NLP_RAG_input_plot import get_tagging_chain, get_classification
 from module_input import get_input_chain, input_into_database
 from module_plot_SVG import get_plot_model, get_plot_from_all, get_plot_from_RAG
-from module_chartJS import get_data_chain, get_labels_chain, get_type_chain, get_graph_type, get_labels, get_data_RAG, get_data_NLP, write_chart_html
+from module_chartJS import get_data_chain, get_labels_chain, get_type_chain, get_graph_type, get_labels, get_data_RAG, get_data_NLP, write_chart_html, get_label_title, get_label_chain
 
 # Constants for configuration
 URI_DB = "sqlite:///googleDb.sqlite3"
@@ -71,6 +71,7 @@ def main():
     data_chain = get_data_chain()
     labels_chain = get_labels_chain()
     type_chain = get_type_chain()
+    label_chain = get_label_chain()
 
     while True:
         # Get the question
@@ -108,6 +109,7 @@ def main():
                 get_plot_from_RAG(get_plot_model(), response, question, PRINT_SETTINGS)
         elif PRINT_SETTINGS["call_JSON_plot"]:
             method = method.split("|")
+            label = get_label_title(question, label_chain)
             if method[0] == "NLP":
                 response = NLP(question, nlp_db, full_chain, correction_chain, description_chain, PRINT_SETTINGS)
                 chart_type = get_graph_type(type_chain, question, PRINT_SETTINGS)
@@ -119,7 +121,7 @@ def main():
                 labels = get_labels(labels_chain, question, chart_type, response, PRINT_SETTINGS)
                 data = get_data_RAG(data_chain, question, chart_type, labels, response, PRINT_SETTINGS)
 
-            write_chart_html(chart_type, labels, data)
+            write_chart_html(chart_type, labels, data, label)
         else:
             response = "An error occurred while trying to classify the question. Try again"
 
