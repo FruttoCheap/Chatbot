@@ -7,23 +7,36 @@
         <title>Chart</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f9;
+            * {
                 margin: 0;
                 padding: 0;
+                box-sizing: border-box;
+            }
+            body, html {
+                height: 100%;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+            }
+            body {
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 height: 100vh;
+                position: relative;
             }
             .chart-container {
-                width: 75%;
-                margin: 0 auto;
+                width: 80%;
+                max-width: 900px;
+                height: 70vh;
                 background: #fff;
                 padding: 20px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 border-radius: 8px;
+                z-index: 10;
+                position: relative;
+            }
+            canvas {
+                display: block;
             }
         </style>
     </head>
@@ -33,8 +46,8 @@
         </div>
      <script>
             // Data and config from Python
-            const data = {'labels': ['Automotive', 'Decor', 'Electronics', 'Entertainment', 'Fashion', 'Food', 'Furniture', 'Health', 'Kitchen', 'Sports', 'Travel'], 'datasets': [{'label': 'Amount of money spent', 'data': ['400.0', '115.0', '3425.0', '270.0', '1030.0', '385.0', '295.0', '410.0', '115.0', '100.0', '680.00'], 'backgroundColor': 'rgba(75, 192, 192, 0.2)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
-         const config = {"type": "bar", "data": {"labels": ["Automotive", "Decor", "Electronics", "Entertainment", "Fashion", "Food", "Furniture", "Health", "Kitchen", "Sports", "Travel"], "datasets": [{"label": "Amount of money spent", "data": ["400.0", "115.0", "3425.0", "270.0", "1030.0", "385.0", "295.0", "410.0", "115.0", "100.0", "680.00"], "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"responsive": true, "scales": {"y": {"beginAtZero": true}}}};
+            const data = {'labels': ['electronics', 'fashion', 'travel', 'health', 'automotive'], 'datasets': [{'label': 'Total expense', 'data': ['3425.0', '1030.0', '680.0', '410.0', '400.00'], 'backgroundColor': 'rgba(75, 192, 192, 0.2)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
+         const config = {"type": "bar", "data": {"labels": ["electronics", "fashion", "travel", "health", "automotive"], "datasets": [{"label": "Total expense", "data": ["3425.0", "1030.0", "680.0", "410.0", "400.00"], "backgroundColor": "rgba(75, 192, 192, 0.2)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true}}}};
          // Render the chart
             const myChart = new Chart(
                 document.getElementById('myChart'),

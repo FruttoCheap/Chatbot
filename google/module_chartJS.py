@@ -49,10 +49,6 @@ def print_all(context: list) -> str:
     """Returns all the rows that are relevant to the question."""
     return '\n'.join(map(str, context))
 @tool
-def no_result(context: list) -> str:
-    """Returns a message if there are no results."""
-    return "No match found."
-@tool
 def select_cheapest(context: list) -> str:
     """Returns the cheapest item from the context."""
     prices = []
@@ -93,7 +89,7 @@ def tool_chain(model_output):
     return itemgetter("arguments") | chosen_tool
 
 def get_tools():
-    return [total, average, count, print_all, no_result, select_cheapest, select_most_expensive]
+    return [total, average, count, print_all, select_cheapest, select_most_expensive]
 
 def get_rendered_tools():
     tools = get_tools()
@@ -124,10 +120,12 @@ def get_labels_chain():
     prompt = PromptTemplate.from_template("""You are an expert at data visualization. You will receive a question from the user, the type of chart to realize and the data to use.
                                              You will have, as data, a list of expenses with the columns price, description, category, and timestamp.
                                              You will output only the labels for the chart, not the corresponding values.
+                                             If you have labels to be time, order them in chronological order. Do not translate dates in English.
                                              Example UserInput: "What is the distribution of expenses by category? Give me the chart."
                                              Example Output: ["Food", "Transport", "Entertainment"]
                                              Give out the output, not the UserInput.
                                              Don't create new output, get it from {result_search}.
+                                             Always take the label from the given data.
                                              UserInput: {question}.
                                              Type of chart: {chart_type}.
                                              Data: {result_search}.""")
@@ -147,6 +145,8 @@ def get_label_chain():
                                             Example 2:
                                             UserInput: "Give me a chart that shows how many expenses I did in 2023."
                                             Output: "Number of expenses"
+
+                                            You must not write anything like "Output: ", just write the title.
                                             UserInput: {question}.""")
     
     label_chain = prompt | llm | StrOutputParser()
@@ -160,13 +160,14 @@ def get_data_chain():
                      Here are the tools available and their descriptions:
                      {rendered_tools}
                      Your goal:
+                     - The data should be all of the same kind. No strings with floats, for example.
+                     - You must not provide all 0.0 as data.
                      - Select the correct tool for the task.
-                     - Ensure **every** part of the context is passed to the tools.
+                     - If no specific time frame is provided, please start from today and extend back to the earliest year you can imagine                     - Ensure **every** part of the context is passed to the tools.
                      - Provide a response in JSON format with 'name' and 'arguments' keys.
-                     - If you believe you don't have enough context, use the no_result tool.
-                     - If a day, month, year or time is mentioned in the input, use the no_result tool.
-                     - If the context is empty, use the no_result tool.
                      - If "average" or "mean" in context, use the average tool.
+                     - You must get one value for each label.
+                     - Don't get more than one value for each label.
                      Always output a readable JSON format for the JsonOutputParser.
                      Example output: {{
                          "id": 0,
@@ -201,32 +202,22 @@ def get_data_chain():
     return data_chain
 
 
-def get_graph_type(type_chain, question, PRINT_SETTINGS):
-    graph_type = type_chain.invoke({"question": question})
-    if (PRINT_SETTINGS["print_plot_type"]):
-        print(f"Graph type: {graph_type}")
-    return graph_type 
+def get_graph_type(type_chain, question):
+    return type_chain.invoke({"question": question})
 
 def get_labels(lables_chain, question, chart_type, result_search, PRINT_SETTINGS):
     labels = lables_chain.invoke({"question": question, "chart_type": chart_type, "result_search": result_search})
     
-    if (PRINT_SETTINGS["print_plot_labels"]):
-        print(f"Labels: {labels}")
-    
     # Check if the input is a list-like string
     if labels.startswith("[") and labels.endswith("]"):
-        # Try to safely evaluate the list-like string
         try:
             labels = ast.literal_eval(labels)
-            if (PRINT_SETTINGS["print_plot_labels"]):
-                print(f"Labels: {labels}")
-            return labels
         except (ValueError, SyntaxError):
-            # Handle invalid list-like strings
             labels = []
-            if (PRINT_SETTINGS["print_plot_labels"]):
-                print(f"Labels: {labels}")
-            return labels
+
+        if (PRINT_SETTINGS["print_plot_labels"]):
+            print(f"Labels: {labels}")
+        return labels
     else:
         # Handle a comma-separated string
         labels = [label.strip() for label in labels.split(',')]
@@ -316,6 +307,7 @@ def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
         'data': data,
         'options': {
             'responsive': True,
+            'maintainAspectRatio': False,
             'scales': {
                 'y': {
                     'beginAtZero': True
@@ -333,23 +325,36 @@ def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
         <title>Chart</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f9;
+            * {{
                 margin: 0;
                 padding: 0;
+                box-sizing: border-box;
+            }}
+            body, html {{
+                height: 100%;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+            }}
+            body {{
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 height: 100vh;
+                position: relative;
             }}
             .chart-container {{
-                width: 75%;
-                margin: 0 auto;
+                width: 80%;
+                max-width: 900px;
+                height: 70vh;
                 background: #fff;
                 padding: 20px;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 border-radius: 8px;
+                z-index: 10;
+                position: relative;
+            }}
+            canvas {{
+                display: block;
             }}
         </style>
     </head>
