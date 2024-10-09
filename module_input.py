@@ -9,7 +9,7 @@ class Answer(BaseModel):
 
     price: float = Field(description="The sum of money spent by the user")
     description: str = Field(description="A short description of the user's expense")
-    category: str = Field(description="The category of the user's expense")
+    category: str = Field(description="The category of the user's expense. It must be in lowercase.")
 
 
 def get_input_chain():

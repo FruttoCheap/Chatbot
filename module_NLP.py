@@ -76,6 +76,9 @@ def get_NLP_chains(db):
                 Follow these rules:
                 - TOP: ORDER BY DESC
                 - Never use LIMIT 5 if not actually required.
+                - Never use LIMIT 5 if not actually required.
+                - Never use LIMIT 5 if not actually required.
+                - Never use LIMIT 5 if not actually required.
                 - Use LIMIT 1 only if you must find the min or max value.
                 - For questions like "How much do I spend in the evenings?" you should output the total spending after 18:00 from the first day. 
                 - If the question is asked in present tense, start from the first day to today.
