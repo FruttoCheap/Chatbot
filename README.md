@@ -1,6 +1,6 @@
 # Personal Finance Chatbot
 
-This is a personal finance chatbot application that allows users to interact with their financial data using natural language commands. Users can insert, retrieve, and visualize their expenses through voice commands or text inputs, with intelligent suggestions powered by NLP and AI models.
+This is a personal finance chatbot application that allows users to interact with their financial data using natural language commands. Users can insert, retrieve, and visualize their expenses through voice commands or text inputs, with intelligent suggestions powered by NLP and RAG AI models.
 
 ## Setup Instructions
 
