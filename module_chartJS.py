@@ -291,33 +291,78 @@ def get_label_title(question, model):
     return model.invoke({"question": question})
 
 def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
-    data = {
-        'labels': labels,
-        'datasets': [{
-            'label': label,
-            'data': data,
-            'backgroundColor': 'rgba(75, 192, 192, 0.2)',
-            'borderColor': 'rgba(75, 192, 192, 1)',
-            'borderWidth': 1
-        }]
-    }
+    background_colors = [
+        'rgba(3, 7, 30, 0.5)',
+        'rgba(55, 6, 23, 0.5)',
+        'rgba(106, 4, 15, 0.5)',
+        'rgba(157, 2, 8, 0.5)',
+        'rgba(208, 0, 0, 0.5)',
+        'rgba(220, 47, 2, 0.5)',
+        'rgba(232, 93, 4, 0.5)',
+        'rgba(244, 140, 6, 0.5)',
+        'rgba(250, 163, 7, 0.5)',
+        'rgba(255, 186, 8, 0.5)',
+    ] * (len(labels) // 10 + 1)
+
+    border_colors = [
+        'rgba(3, 7, 30, 1)',
+        'rgba(55, 6, 23, 1)',
+        'rgba(106, 4, 15, 1)',
+        'rgba(157, 2, 8, 1)',
+        'rgba(208, 0, 0, 1)',
+        'rgba(220, 47, 2, 1)',
+        'rgba(232, 93, 4, 1)',
+        'rgba(244, 140, 6, 1)',
+        'rgba(250, 163, 7, 1)',
+        'rgba(255, 186, 8, 1)',
+    ] * (len(labels) // 10 + 1)
+
+    if (chart_type != "line"):
+        data = {
+            'labels': labels,
+            'datasets': [{
+                'data': data,
+                'backgroundColor': background_colors[:len(labels)],
+                'borderColor': border_colors[:len(labels)],
+                'borderWidth': 1
+            }]
+        }
+    else:
+        data = {
+            'labels': labels,
+            'datasets': [{
+                'data': data,
+                'backgroundColor': 'rgba(75, 192, 192, 0.5)',
+                'borderColor': 'rgba(75, 192, 192, 1)',
+                'borderWidth': 1
+            }]
+        }
 
     config = {
-        'type': chart_type,  # You can change this to 'bar', 'pie', 'doughnut', 'line', 'polarArea', 'radar'.
+        'type': chart_type,
         'data': data,
         'options': {
+            'plugins': {
+                'legend': {
+                    'display': True if chart_type == "pie" else False
+                }
+            },
             'responsive': True,
             'maintainAspectRatio': False,
             'scales': {
                 'y': {
-                    'beginAtZero': True
+                    'beginAtZero': True,
+                    'title': {
+                        'display': chart_type != "pie",
+                        'text': label if chart_type != "pie" else ""
+                    }
                 }
-            }
+            } if chart_type != "pie" else {}
         }
     }
 
     html_content = f"""
-        <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -362,11 +407,11 @@ def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
         <div class="chart-container">
             <canvas id="myChart"></canvas>
         </div>
-     <script>
+        <script>
             // Data and config from Python
             const data = {data};
-         const config = {json.dumps(config)};
-         // Render the chart
+            const config = {json.dumps(config)};
+            // Render the chart
             const myChart = new Chart(
                 document.getElementById('myChart'),
                 config
