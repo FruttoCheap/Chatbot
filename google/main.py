@@ -19,23 +19,23 @@ INPUT_DB = "googleDb.sqlite3"
 MAX_DESCRIPTION_LENGTH = 255
 
 PRINT_SETTINGS = {
-    "print_question": True,
+    "print_question": False,
     "print_query": False,
     "print_description": False,
-    "print_corrected_query": True,
+    "print_corrected_query": False,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
     "print_smallest_chunk": False,
-    "print_context": True,
-    "print_method": True,
+    "print_context": False,
+    "print_method": False,
     "print_characteristics_of_the_question": False,
     "print_explaination_plot": False,
     "call_SVG_plot": False,
     "call_JSON_plot": True,
-    "print_plot_type": True,
-    "print_plot_labels": True,
-    "print_plot_data": True
+    "print_plot_type": False,
+    "print_plot_labels": False,
+    "print_plot_data": False
 }
 
 # Load environment variables from .env file
@@ -117,8 +117,7 @@ def main():
     labels_chain = get_labels_chain()
 
     while True:
-        #question = input("Enter your question ('X' or 'x' to exit): ")     TODO TO UNCOMMENT
-        question = "Visualize the relationship between my expenses and specific time frames (e.g., days of the week or times of day)."       # TODO TO DELETE
+        question = input("Enter your question ('X' or 'x' to exit): ")
         if question.lower() == 'x':
             exit()
         method = get_classification(question, tagging_chain, PRINT_SETTINGS)
@@ -143,8 +142,6 @@ def main():
             response = "An error occurred while trying to classify the question. Try again."
         if "PLT" not in method:
                 print(f"Response: {response}.")
-
-        exit()  # TODO to delete
 
 if __name__ == "__main__":
     main()

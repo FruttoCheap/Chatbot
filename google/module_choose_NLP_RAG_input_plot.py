@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from langchain_groq import ChatGroq
 
 class Classification(BaseModel):
-    is_there_time: int = Field(description="0 if there is nothing related to time in the questino, 1 if there is.")
+    is_there_time: int = Field(description="0 if there is nothing related to time in the question, 1 if there is.")
     is_specific: int = Field(description="From 0 to 10, how specific is the question?")
     is_broad: int = Field(description="From 0 to 10, how broad is the question?")
     has_keyword: int = Field(description="From 0 to 10, are there keywords in the question? If there are not, put 0.")
@@ -36,7 +36,6 @@ def get_tagging_chain():
             {input}
             """)
 
-    # LLM
     llm = ChatGroq(temperature=0, model="llama3-groq-70b-8192-tool-use-preview").with_structured_output(Classification)
 
     tagging_chain = tagging_prompt | llm
