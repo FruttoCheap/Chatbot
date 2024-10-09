@@ -22,7 +22,7 @@ PRINT_SETTINGS = {
     "print_question": False,
     "print_query": False,
     "print_description": False,
-    "print_corrected_query": True,
+    "print_corrected_query": False,
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
