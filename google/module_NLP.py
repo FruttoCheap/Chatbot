@@ -12,7 +12,7 @@ def get_database(uri):
     db.run("DROP TABLE IF EXISTS 'EXPENSES';")
     return db
 
-# Function used to elaborate queries-
+# Function used to elaborate queries
 def NLP(question, db, chain, correction_chain, description_chain, PRINT_SETTINGS):
     start = timer()
     if PRINT_SETTINGS["print_question"]:
