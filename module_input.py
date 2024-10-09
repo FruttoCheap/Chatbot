@@ -39,7 +39,7 @@ def input_into_database(question, chain, cur, MAX_DESCRIPTION_LENGTH):
         
         # Insert the new record into the database
         cur.execute("INSERT INTO expensesok (price, description, category, timestamp) VALUES (?, ?, ?, ?);", 
-                    (resp.price, resp.description, resp.category, date))
+                    (resp.price, resp.description, (resp.category).lower(), date))
         
         # Commit the transaction to save the changes
         cur.connection.commit()
