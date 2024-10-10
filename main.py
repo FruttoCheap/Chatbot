@@ -1,5 +1,6 @@
-import os
-import sqlite3
+from os import environ, getenv
+from sqlite3 import connect
+from sys import exit
 from dotenv import load_dotenv
 from module_NLP import get_database, get_NLP_chains, NLP
 from module_RAG import get_embedded_database, RAG, stripOutput
@@ -41,7 +42,7 @@ PRINT_SETTINGS = {
 # Load environment variables from .env file
 def load_environment_variables():
     load_dotenv()
-    os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+    environ["GROQ_API_KEY"] = getenv("GROQ_API_KEY")
 
 # Initialize NLP components
 def initialize_nlp(uri_db):
@@ -102,7 +103,7 @@ def main():
     tagging_chain = get_tagging_chain()
 
     # Initialize input database
-    connection = sqlite3.connect(INPUT_DB)
+    connection = connect(INPUT_DB)
     cursor = connection.cursor()
     input_chain = get_input_chain()
 
@@ -144,4 +145,8 @@ def main():
                 print(f"Response: {response}.")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        print(f"An error occurred: {error}.")
+        exit(1)
