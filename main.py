@@ -10,7 +10,7 @@ from module_plot_SVG import get_plot_model, get_plot_from_all, get_plot_from_RAG
 from module_chartJS import (
     get_data_chain, get_labels_chain, get_type_chain,
     get_graph_type, get_labels, get_data_RAG, get_data_NLP,
-    write_chart_html, get_label_title, get_label_chain
+    write_chart_html, get_label_title, get_label_chain, get_chart_description_chain
 )
 
 # Constants for configuration
@@ -63,7 +63,7 @@ def handle_svg_plot(method, question, connection, rag_db, PRINT_SETTINGS):
         get_plot_from_RAG(get_plot_model(), response, question, PRINT_SETTINGS)
 
 # Handle JSON plot generation
-def handle_json_plot(method, question, labels_chain, label_chain, type_chain, data_chain, rag_db, nlp_db, PRINT_SETTINGS):
+def handle_json_plot(method, question, labels_chain, label_chain, type_chain, data_chain, rag_db, nlp_db, chart_description_chain, PRINT_SETTINGS):
     label = get_label_title(question, label_chain)
     
     if method[0] == "NLP":
@@ -93,7 +93,7 @@ def handle_json_plot(method, question, labels_chain, label_chain, type_chain, da
         if (PRINT_SETTINGS["print_plot_type"]):
             print(f"Chart type: {chart_type}")
         
-        write_chart_html(chart_type, labels, data, label)
+        write_chart_html(chart_type, labels, data, label, chart_description_chain)
 
 # Main function to run the chatbot
 def main():
@@ -116,6 +116,7 @@ def main():
     type_chain = get_type_chain()
     data_chain = get_data_chain()
     labels_chain = get_labels_chain()
+    chart_descr_chain = get_chart_description_chain()
 
     while True:
         question = input("Enter your question ('X' or 'x' to exit): ")
@@ -136,7 +137,7 @@ def main():
             else:
                 response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS)
         elif PRINT_SETTINGS["call_JSON_plot"]:
-            handle_json_plot(method.split("|"), question, labels_chain, label_chain, type_chain, data_chain, rag_db, nlp_db, PRINT_SETTINGS)
+            handle_json_plot(method.split("|"), question, labels_chain, label_chain, type_chain, data_chain, rag_db, nlp_db, chart_descr_chain, PRINT_SETTINGS)
         elif PRINT_SETTINGS["call_SVG_plot"]:
             handle_svg_plot(method.split("|"), question, connection, rag_db, PRINT_SETTINGS)
         else:

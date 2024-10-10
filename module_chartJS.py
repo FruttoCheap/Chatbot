@@ -290,7 +290,35 @@ def get_data_NLP(labels, context, PRINT_SETTINGS):
 def get_label_title(question, model):
     return model.invoke({"question": question})
 
-def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
+def get_chart_description_chain():
+    llm = ChatGroq(model="llama3-groq-70b-8192-tool-use-preview", temperature=0)
+
+    prompt_template = """You are an expert at financial analysis. You will receive a Chart.js chart, divided into its data and config parameters.
+                        You will output a description of the chart, giving insights about it if you have any.
+                        For example, if you receive a line chart you could say where you have minimums and maximums.
+                        If you receive a pie chart, you could say which category is the most represented.
+                        If you receive a bar chart, you could say which category is the most expensive.
+                        Invent other insights if you want, but don't invent anything that is not related to the graph.
+
+                        Data: {data}
+                        Config: {config}
+                        Output only the insight and description, no other information.
+                        Explain it only one time. Be concise."""
+
+    prompt = ChatPromptTemplate.from_template(
+        prompt_template
+    )
+
+    prompt = prompt.partial(
+        data="{data}",
+        config="{config}"
+    )
+
+    description_chain = prompt | llm | StrOutputParser()
+
+    return description_chain
+
+def write_chart_html(chart_type, labels, data, label, chart_description_chain, filename="chart.html"):
     background_colors = [
         'rgba(3, 7, 30, 0.5)',
         'rgba(55, 6, 23, 0.5)',
@@ -361,64 +389,119 @@ def write_chart_html(chart_type, labels, data, label, filename="chart.html"):
         }
     }
 
+    chart_description = chart_description_chain.invoke({"data": data, "config": json.dumps(config)})
+
     html_content = f"""
 <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chart</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            * {{
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }}
-            body, html {{
-                height: 100%;
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f9;
-            }}
-            body {{
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                position: relative;
-            }}
-            .chart-container {{
-                width: 80%;
-                max-width: 900px;
-                height: 70vh;
-                background: #fff;
-                padding: 20px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                z-index: 10;
-                position: relative;
-            }}
-            canvas {{
-                display: block;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="chart-container">
-            <canvas id="myChart"></canvas>
-        </div>
-        <script>
-            // Data and config from Python
-            const data = {data};
-            const config = {json.dumps(config)};
-            // Render the chart
-            const myChart = new Chart(
-                document.getElementById('myChart'),
-                config
-            );
-        </script>
-    </body>
-    </html>"""
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{label} Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    * {{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }}
+    body, html {{
+        height: 100%;
+        font-family: 'Arial', sans-serif;
+        background-color: #eaeef1; /* Light background for contrast */
+        color: #333; /* Dark text for readability */
+    }}
+    body {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: 100vh;
+        position: relative;
+        padding: 20px;
+    }}
+    .title-container {{
+        margin-bottom: 20px;
+        text-align: center;
+        width: 80%;
+        max-width: 900px;
+        padding: 20px;
+        background-color: #fff; 
+        border-radius: 12px; 
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+    }}
+    .title {{
+        margin: 0; /* Remove default margins */
+    }}
+    .chart-container {{
+        width: 80%;
+        max-width: 900px;
+        height: 70vh;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        z-index: 10;
+        position: relative;
+        transition: transform 0.2s; /* Smooth scaling effect */
+    }}
+    .chart-container:hover {{
+        transform: scale(1.01); /* Slightly enlarge on hover */
+    }}
+    .description-container {{
+        width: 80%;
+        max-width: 900px;
+        padding: 20px;
+        margin-top: 20px;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        line-height: 1.5; /* Improve readability */
+    }}
+    .description-container:hover {{
+        transform: scale(1.01); /* Slightly enlarge on hover */
+    }}
+    canvas {{
+        display: block;
+        border-radius: 8px; /* Rounded corners on the chart */
+    }}
+    h1 {{
+        margin-bottom: 20px;
+        font-size: 2em; /* Larger title */
+        color: #2c3e50; /* Darker text color for the title */
+    }}
+    p {{
+        font-size: 1.1em; /* Slightly larger font for descriptions */
+        color: #555; /* Softer text color for descriptions */
+    }}
+</style>
+</head>
+<body>
+<div class="title-container">
+    <h1 class="title">{label} chart</h1>
+</div>
+    <!-- Chart section -->
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        // Data and config from Python
+        const data = {data};
+        const config = {json.dumps(config)};
+        // Render the chart
+        const myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+    </script>
+    <!-- Explanation section -->
+    <div class="description-container">
+        <p id="chart-description">{chart_description}</p>
+    </div>
+</body>
+</html>
+"""
 
     with open(filename, 'w') as f:
         f.write(html_content)

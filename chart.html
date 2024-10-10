@@ -1,11 +1,11 @@
 
-<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chart</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Amount Spent Chart</title>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             * {
                 margin: 0;
@@ -14,45 +14,103 @@
             }
             body, html {
                 height: 100%;
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f9;
+                font-family: 'Arial', sans-serif;
+                background-color: #eaeef1; /* Light background for contrast */
+                color: #333; /* Dark text for readability */
             }
             body {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                flex-direction: column;
                 height: 100vh;
                 position: relative;
+                padding: 20px;
             }
+            .title-container {
+    margin-bottom: 20px;
+    text-align: center;
+    width: 80%;
+    max-width: 900px;
+    padding: 20px;
+    background-color: #fff; 
+    border-radius: 12px; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+}
+
+.title {
+    margin: 0; /* Remove default margins */
+}
             .chart-container {
                 width: 80%;
                 max-width: 900px;
                 height: 70vh;
                 background: #fff;
                 padding: 20px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                border-radius: 12px;
                 z-index: 10;
                 position: relative;
+                transition: transform 0.2s; /* Smooth scaling effect */
+            }
+            .chart-container:hover {
+                transform: scale(1.01); /* Slightly enlarge on hover */
+            }
+            .description-container {
+                width: 80%;
+                max-width: 900px;
+                padding: 20px;
+                margin-top: 20px;
+                background-color: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                line-height: 1.5; /* Improve readability */
+            }
+            .description-container:hover {
+                transform: scale(1.01); /* Slightly enlarge on hover */
             }
             canvas {
                 display: block;
+                border-radius: 8px; /* Rounded corners on the chart */
+            }
+            h1 {
+                margin-bottom: 20px;
+                font-size: 2em; /* Larger title */
+                color: #2c3e50; /* Darker text color for the title */
+            }
+            p {
+                font-size: 1.1em; /* Slightly larger font for descriptions */
+                color: #555; /* Softer text color for descriptions */
             }
         </style>
-    </head>
-    <body>
-        <div class="chart-container">
-            <canvas id="myChart"></canvas>
-        </div>
-        <script>
-            // Data and config from Python
-            const data = {'labels': ['2020', '2021', '2022', '2023', '2024'], 'datasets': [{'data': ['1310.0', '1140.00', '2325.0', '9005.0', '7695.0'], 'backgroundColor': 'rgba(75, 192, 192, 0.5)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
-            const config = {"type": "line", "data": {"labels": ["2020", "2021", "2022", "2023", "2024"], "datasets": [{"data": ["1310.0", "1140.00", "2325.0", "9005.0", "7695.0"], "backgroundColor": "rgba(75, 192, 192, 0.5)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Total amount spent"}}}}};
-            // Render the chart
-            const myChart = new Chart(
-                document.getElementById('myChart'),
-                config
-            );
-        </script>
-    </body>
-    </html>
+
+        </head>
+        <body>
+            <div class="title-container">
+                <h1 class="title">Amount Spent Chart</h1>
+            </div>
+            <!-- Chart section -->
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+
+            <script>
+                // Data and config from Python
+                const data = {'labels': ['2023-10', '2023-09', '2023-11', '2024-09', '2022-12'], 'datasets': [{'data': ['3280.0', '2905.0', '1855.0', '1735.0', '950.00'], 'backgroundColor': 'rgba(75, 192, 192, 0.5)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
+                const config = {"type": "line", "data": {"labels": ["2023-10", "2023-09", "2023-11", "2024-09", "2022-12"], "datasets": [{"data": ["3280.0", "2905.0", "1855.0", "1735.0", "950.00"], "backgroundColor": "rgba(75, 192, 192, 0.5)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Amount Spent"}}}}};
+                // Render the chart
+                const myChart = new Chart(
+                    document.getElementById('myChart'),
+                    config
+                );
+            </script>
+
+            <!-- Explanation section -->
+            <div class="description-container">
+                <p id="chart-description">This line chart displays the amount spent over a period of time, with the highest spending recorded in October 2023 at $3280.0 and the lowest in December 2022 at $950.00. The chart shows a general upward trend in spending, with a significant increase in October 2023.</p>
+            </div>
+
+        </body>
+        </html>
+        
