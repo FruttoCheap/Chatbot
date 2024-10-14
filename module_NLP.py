@@ -75,10 +75,11 @@ def get_NLP_chains(db):
                 - Use SQLITE3 syntax.
                 Follow these rules:
                 - TOP: ORDER BY DESC
-                - Never use LIMIT 5 if not actually required.
-                - Never use LIMIT 5 if not actually required.
-                - Never use LIMIT 5 if not actually required.
-                - Never use LIMIT 5 if not actually required.
+                - Never use limit 5 if there are no numbers in the question.
+                - Never use limit 5 if there are no numbers in the question.
+                - Never use limit 5 if there are no numbers in the question.
+                - Never use LIMIT 5
+                - If you need to plot, only extract 2 columns per query.
                 - Use LIMIT 1 only if you must find the min or max value.
                 - For questions like "How much do I spend in the evenings?" you should output the total spending after 18:00 from the first day. 
                 - If the question is asked in present tense, start from the first day to today.
@@ -119,6 +120,9 @@ def get_NLP_chains(db):
                                                 If the question regards plots, the query must only select 2 columns.
                                                 Correct syntax: date('2024-09-12', '-30 days')
                                                 Correct syntax: date('2024-09-12', '+1 day')
+                                                - Never use limit 5 if there is no number "5" in the question {question}.
+                                                - Never use limit 5 if there is no number "5" in the question {question}.
+                                                - Never use limit 5 if there is no number "5" in the question {question}.
                                                 Never use LIMIT 5 if not actually required.
                                                 - TOP: ORDER BY DESC
                                                 Lowest: group by ORDER BY ASC

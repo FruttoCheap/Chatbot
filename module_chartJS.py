@@ -11,6 +11,11 @@ from operator import itemgetter
 from langchain.tools.render import render_text_description
 
 @tool
+def print_all(context: list) -> str:
+    """Returns all the rows that are relevant to the question."""
+    return '\n'.join(map(str, context))
+
+@tool
 def total(context: list) -> int:
     """Extracts the prices and returns the total expense value. 'context' is the list of all expenses."""
     prices = []
@@ -41,13 +46,19 @@ def average(context: list) -> int:
 
     return avg
 @tool
-def count(context: list) -> int:
+def count(context: list) -> float:
     """Returns the number of rows that are relevant to the question."""
     return len(context)
 @tool
-def print_all(context: list) -> str:
-    """Returns all the rows that are relevant to the question."""
-    return '\n'.join(map(str, context))
+def get_price(context: list) -> list:
+    """Extracts the price from the context."""
+    prices = []
+    
+    for result in context:
+        if result.isdigit():
+            prices.append(float(result))
+
+    return prices
 @tool
 def select_cheapest(context: list) -> str:
     """Returns the cheapest item from the context."""
@@ -89,7 +100,7 @@ def tool_chain(model_output):
     return itemgetter("arguments") | chosen_tool
 
 def get_tools():
-    return [total, average, count, print_all, select_cheapest, select_most_expensive]
+    return [total, average, count, get_price, print_all, select_cheapest, select_most_expensive]
 
 def get_rendered_tools():
     tools = get_tools()
@@ -121,6 +132,7 @@ def get_labels_chain():
                                              You will have, as data, a list of expenses with the columns price, description, category, and timestamp.
                                              You will output only the labels for the chart, not the corresponding values.
                                              If you have labels to be time, order them in chronological order. Do not translate dates in English.
+                                             If you have a time indication, do not ignore it. Questions like "through the years" should have a value for each year.
                                              Example UserInput: "What is the distribution of expenses by category? Give me the chart."
                                              Example Output: ["Food", "Transport", "Entertainment"]
                                              Give out the output, not the UserInput.
@@ -157,10 +169,18 @@ def get_data_chain():
     prompt_template = """You are responsible for selecting the correct tool from the following list and specifying the function name and arguments based on the user's question.
                      Choose the correct tool from the list below, finding the one relevant to the question, and provide the function name and arguments to extract the relevant information from the context.
                      The number of elements in the lists must be equal to the number of labels.
+                     Only output numeric values, corresponding to prices.
+                     ALWAYS EXTRACT NUMBERS AT THE END.
+                     Never extract string values.
+                     through=for each
+                     over=for each
+                     most_expensive=get_price
+                     Select the prices from the context.
                      Here are the tools available and their descriptions:
                      {rendered_tools}
                      Your goal:
-                     - The data should be all of the same kind. No strings with floats, for example.
+                     - Only get numeric values.
+                     - Never get values that are strings.
                      - You must not provide all 0.0 as data.
                      - Select the correct tool for the task.
                      - If no specific time frame is provided, please start from today and extend back to the earliest year you can imagine                     - Ensure **every** part of the context is passed to the tools.
@@ -168,6 +188,7 @@ def get_data_chain():
                      - If "average" or "mean" in context, use the average tool.
                      - You must get one value for each label.
                      - Don't get more than one value for each label.
+                     - If you have a time indication, do not ignore it. Questions like "through the years" should have a value for each year.
                      Always output a readable JSON format for the JsonOutputParser.
                      Example output: {{
                          "id": 0,
@@ -271,15 +292,40 @@ def get_data_NLP(labels, context, PRINT_SETTINGS):
     if (PRINT_SETTINGS["print_context"]):
         print(f"Context: {context}")
 
+    data_dict = {}
     if isinstance(context[0], str) and 'T' in context[0]:  # Check for timestamp format (with 'T')
         # Data contains dates and values
-        data_dict = {entry[:10].strip('"'): context[i+1] for i, entry in enumerate(context) if i % 2 == 0}
+        for i, entry in enumerate(context):
+            if i % 2 == 0:  # This is a key
+                key = entry[:10].strip('"')
+                value = context[i + 1]
+                if key in data_dict:
+                    data_dict[key].append(value)  # Append value to existing list
+                else:
+                    data_dict[key] = [value]  # Create a new list for new key
     else:
         # Data contains simple labels and values
-        data_dict = {context[i].strip('"'): context[i+1] for i in range(0, len(context), 2)}
+        for i in range(0, len(context), 2):
+            key = context[i].strip('"')
+            value = context[i + 1]
+            if key in data_dict:
+                data_dict[key].append(value)  # Append value to existing list
+            else:
+                data_dict[key] = [value]  # Create a new list for new key
 
-    # Create an aligned list for the data based on the labels
-    aligned_data = [data_dict.get(label.strip('"').lower(), 0.0) for label in labels]
+    aligned_data = []
+    
+    print(f"Data_Dict: {data_dict}")
+    # Iterate over each key-value pair in the dictionary
+    labels = [label.strip('"').strip("'").lower() for label in labels]
+    for key, values in data_dict.items():
+        if key.lower() in labels:
+            for value in values:
+                aligned_data.append(value)
+        else:
+            for value in values:
+                if value in labels:
+                    aligned_data.append(key)
 
     if (PRINT_SETTINGS["print_plot_data"]):
         print(f"Aligned Data: {aligned_data}")
@@ -299,6 +345,7 @@ def get_chart_description_chain():
                         If you receive a pie chart, you could say which category is the most represented.
                         If you receive a bar chart, you could say which category is the most expensive.
                         Invent other insights if you want, but don't invent anything that is not related to the graph.
+                        Don't say things like "The chart is designed with a blue color scheme and has a scale that begins at zero, providing a clear visual representation of the expenditure."
 
                         Data: {data}
                         Config: {config}
