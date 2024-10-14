@@ -20,23 +20,23 @@ INPUT_DB = "googleDb.sqlite3"
 MAX_DESCRIPTION_LENGTH = 255
 
 PRINT_SETTINGS = {
-    "print_question": True,
-    "print_query": True,
-    "print_description": True,
-    "print_corrected_query": True,
-    "print_time": True,
-    "print_scores": True,
-    "print_chunks": True,
-    "print_smallest_chunk": True,
-    "print_context": True,
-    "print_method": True,
-    "print_characteristics_of_the_question": True,
-    "print_explaination_plot": True,
-    "call_SVG_plot": True,
+    "print_question": False,
+    "print_query": False,
+    "print_description": False,
+    "print_corrected_query": False,
+    "print_time": False,
+    "print_scores": False,
+    "print_chunks": False,
+    "print_smallest_chunk": False,
+    "print_context": False,
+    "print_method": False,
+    "print_characteristics_of_the_question": False,
+    "print_explaination_plot": False,
+    "call_SVG_plot": False,
     "call_JSON_plot": True,
-    "print_plot_type": True,
-    "print_plot_labels": True,
-    "print_plot_data": True
+    "print_plot_type": False,
+    "print_plot_labels": False,
+    "print_plot_data": False
 }
 
 # Load environment variables from .env file
