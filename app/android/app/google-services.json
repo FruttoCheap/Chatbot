@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "36709237639",
+    "project_id": "dev-d4832",
+    "storage_bucket": "dev-d4832.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36709237639:android:669843f1b637fe42104922",
+        "android_client_info": {
+          "package_name": "com.googledev.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkv-xhvAhdsHmJtFd_IHAedm8g2ctMd2A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

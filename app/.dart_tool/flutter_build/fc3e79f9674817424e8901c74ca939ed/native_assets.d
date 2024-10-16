@@ -1,0 +1,1 @@
+ /home/romano/Desktop/tirocinio/Chatbot/flutter_app/.dart_tool/flutter_build/fc3e79f9674817424e8901c74ca939ed/native_assets.yaml: 
