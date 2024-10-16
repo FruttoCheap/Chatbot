@@ -149,7 +149,7 @@ def main():
         else:
             response = "An error occurred while trying to classify the question. Try again."
         if "PLT" not in method:
-                print(f"Response: {response}.")
+            print(f"Response: {response}.")
 
 if __name__ == "__main__":
     try:
