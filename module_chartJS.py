@@ -292,6 +292,7 @@ def get_data_NLP(labels, context, PRINT_SETTINGS):
 
     aligned_data = []
     
+    print(f"Data_Dict: {data_dict}")
     # Iterate over each key-value pair in the dictionary
     labels = [label.strip('"').strip("'").lower() for label in labels]
     for key, values in data_dict.items():

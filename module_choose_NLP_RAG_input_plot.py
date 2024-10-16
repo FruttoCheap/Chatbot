@@ -12,7 +12,7 @@ class Classification(BaseModel):
     is_there_number: int = Field(description="0 if there is no explicit number in the question, 1 if there is and explicit number in the question.")
     is_there_category: int = Field(description="0 if the word 'category' is not in the question, 1 if there is the word 'category' in the question.")
     is_it_question: int = Field(description="1 if the question asks for something in return, 0 if it is just a sentence.")
-    is_asking_for_plot: int = Field(description="1 if the question is asking in any way for a plot or a graph or a visualization, 0 if it is not.")
+    is_asking_for_plot: int = Field(description="1 if the question is asking in any way for a plot or a graph, 0 if it is not.")
 
 def get_tagging_chain():
     tagging_prompt = ChatPromptTemplate.from_template("""
@@ -31,7 +31,7 @@ def get_tagging_chain():
             7. **is_there_number**: Set to 1 only if there an explicit number in the question, otherwise set to 0.
             8. **is_there_category**: Set to 1 only if there is the word 'category' in the question, otherwise set to 0.
             9. **is_it_question**: Set to 1 if the question asks for something in return, otherwise set to 0.
-            10. **is_asking_for_plot**: Set to 1 if the question is asking in any way for a plot or a graph or a visualization, otherwise set to 0.
+            10. **is_asking_for_plot**: Set to 1 if the question is asking in any way for a plot or a graph, otherwise set to 0.
             Passage:
             {input}
             """)
