@@ -27,16 +27,16 @@ PRINT_SETTINGS = {
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
-    "print_smallest_chunk": False,
-    "print_context": False,
-    "print_method": False,
+    "print_smallest_chunk": True,
+    "print_context": True,
+    "print_method": True,
     "print_characteristics_of_the_question": False,
     "print_explaination_plot": False,
     "call_SVG_plot": False,
     "call_JSON_plot": True,
-    "print_plot_type": False,
-    "print_plot_labels": False,
-    "print_plot_data": False
+    "print_plot_type": True,
+    "print_plot_labels": True,
+    "print_plot_data": True
 }
 
 # Load environment variables from .env file
@@ -69,6 +69,8 @@ def handle_json_plot(method, question, labels_chain, label_chain, type_chain, da
     if method[0] == "NLP":
         response = NLP(question, nlp_db, *initialize_nlp(URI_DB)[1:], PRINT_SETTINGS)
         chart_type = get_graph_type(type_chain, question)
+        if len(chart_type) > 20:
+            chart_type = "bar" 
         labels = get_labels(labels_chain, question, chart_type, response, PRINT_SETTINGS)
         try:
             data = get_data_NLP(labels, response, PRINT_SETTINGS)
@@ -78,9 +80,13 @@ def handle_json_plot(method, question, labels_chain, label_chain, type_chain, da
     elif method[0] == "RAG":
         response = RAG(question, rag_db, stripOutput, PRINT_SETTINGS, is_for_plot=True)
         chart_type = get_graph_type(type_chain, question)
+        if len(chart_type) > 20:
+            chart_type = "bar" 
         labels = get_labels(labels_chain, question, chart_type, response, PRINT_SETTINGS)
         try:
             data = get_data_RAG(data_chain, question, chart_type, labels, response, PRINT_SETTINGS)
+            if isinstance(data, str):
+                data = [data]
         except Exception:
             print("There was an error in the creation of the chart. Try to be more specific.")
             return

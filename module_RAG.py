@@ -234,9 +234,6 @@ def RAG(question, db, stripOutput, PRINT_SETTINGS, is_for_plot=False, eps=35, mi
     
     res = chain.invoke({"input": question})
     
-    # User interaction 
-    res = chain.invoke({"input": question})
-
     rendered_tools = get_rendered_tools() 
     # Define chain 
     system_prompt_tools = f"""

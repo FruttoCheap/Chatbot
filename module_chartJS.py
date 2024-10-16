@@ -28,6 +28,7 @@ def total(context: list) -> int:
                 prices.append(float(i))
 
     return sum(prices)
+
 @tool
 def average(context: list) -> int:
     """Returns the average expense value. 'context' is the list of all results. Instead of dividing by zero, returns a test sentence."""
@@ -45,20 +46,25 @@ def average(context: list) -> int:
     avg = round(float(sum(prices) / len(prices)), 2) if len(prices) != 0 else 0
 
     return avg
+
 @tool
 def count(context: list) -> float:
     """Returns the number of rows that are relevant to the question."""
     return len(context)
+
 @tool
 def get_price(context: list) -> list:
     """Extracts the price from the context."""
     prices = []
-    
+
     for result in context:
-        if result.isdigit():
-            prices.append(float(result))
+        # Correct regex pattern to match both integers and floating-point numbers
+        matches = re.findall(r"\d+\.\d+|\d+", result)
+        for match in matches:
+            prices.append(float(match))
 
     return prices
+
 @tool
 def select_cheapest(context: list) -> str:
     """Returns the cheapest item from the context."""
@@ -175,6 +181,7 @@ def get_data_chain():
                      through=for each
                      over=for each
                      most_expensive=get_price
+                     events=entertainment
                      Select the prices from the context.
                      Here are the tools available and their descriptions:
                      {rendered_tools}
@@ -219,10 +226,10 @@ def get_data_chain():
         context="{context}"
     )
 
-    data_chain = prompt | llm | StrOutputParser()  | JsonOutputParser() | tool_chain
+    data_chain = prompt | llm | StrOutputParser() |  JsonOutputParser() | tool_chain 
     return data_chain
 
-
+(lambda x: print("LLM Output:", x) or x)
 def get_graph_type(type_chain, question):
     return type_chain.invoke({"question": question})
 
@@ -251,30 +258,7 @@ def get_data_RAG(data_chain, question, chart_type, labels, context, PRINT_SETTIN
     if (PRINT_SETTINGS["print_plot_data"]):
         print(f"Data: {data}")
 
-    # Check if the input is a list-like string
-    if isinstance(data, str) and data.startswith("[") and data.endswith("]"):
-        # Try to safely evaluate the list-like string
-        try:
-            data = ast.literal_eval(data)
-        except (ValueError, SyntaxError):
-            # Handle invalid list-like strings
-            data = []
-    else:
-        # Handle a comma-separated string
-        data = str(data)
-        data = [info.strip() for info in data.split(',')]
-
-    if (len(data) > 1):    
-        # Create a dictionary from the data
-        data_dict = {data[i]: data[i+1] for i in range(0, len(data), 2)}
-
-        # Create an aligned list for the data based on the labels
-        aligned_data = [data_dict.get(label, 0.0) for label in labels]
-        # Print the aligned data
-        return aligned_data
-
-    else:
-        return data
+    return data
 
 def get_data_NLP(labels, context, PRINT_SETTINGS):
     # Check if the input is a list-like string
