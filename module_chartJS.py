@@ -58,7 +58,6 @@ def get_price(context: list) -> list:
     prices = []
 
     for result in context:
-        # Correct regex pattern to match both integers and floating-point numbers
         matches = re.findall(r"\d+\.\d+|\d+", result)
         for match in matches:
             prices.append(float(match))
@@ -213,12 +212,10 @@ def get_data_chain():
                      Get a value for each label."""
 
 
-    # Create a prompt using the ChatPromptTemplate with variables properly mapped
     prompt = ChatPromptTemplate.from_template(
         prompt_template
     )
 
-    # Define the input variables explicitly for the chain
     prompt = prompt.partial(
         rendered_tools="{rendered_tools}",
         question="{question}",
@@ -262,16 +259,12 @@ def get_data_RAG(data_chain, question, chart_type, labels, context, PRINT_SETTIN
     return data
 
 def get_data_NLP(labels, context, PRINT_SETTINGS):
-    # Check if the input is a list-like string
     if context.startswith("[") and context.endswith("]"):
-        # Try to safely evaluate the list-like string
         try:
             context = ast.literal_eval(context)
         except (ValueError, SyntaxError):
-            # Handle invalid list-like strings
             context = []
     else:
-        # Handle a comma-separated string
         context = [data.strip() for data in context.split(',')]
 
     if (PRINT_SETTINGS["print_context"]):
@@ -279,15 +272,14 @@ def get_data_NLP(labels, context, PRINT_SETTINGS):
 
     data_dict = {}
     if isinstance(context[0], str) and 'T' in context[0]:  # Check for timestamp format (with 'T')
-        # Data contains dates and values
         for i, entry in enumerate(context):
-            if i % 2 == 0:  # This is a key
+            if i % 2 == 0:
                 key = entry[:10].strip('"')
                 value = context[i + 1]
                 if key in data_dict:
-                    data_dict[key].append(value)  # Append value to existing list
+                    data_dict[key].append(value)
                 else:
-                    data_dict[key] = [value]  # Create a new list for new key
+                    data_dict[key] = [value]
     else:
         # Data contains simple labels and values
         for i in range(0, len(context), 2):

@@ -27,16 +27,16 @@ PRINT_SETTINGS = {
     "print_time": False,
     "print_scores": False,
     "print_chunks": False,
-    "print_smallest_chunk": True,
-    "print_context": True,
-    "print_method": True,
+    "print_smallest_chunk": False,
+    "print_context": False,
+    "print_method": False,
     "print_characteristics_of_the_question": False,
     "print_explaination_plot": False,
     "call_SVG_plot": False,
     "call_JSON_plot": True,
-    "print_plot_type": True,
-    "print_plot_labels": True,
-    "print_plot_data": True
+    "print_plot_type": False,
+    "print_plot_labels": False,
+    "print_plot_data": False
 }
 
 # Load environment variables from .env file
@@ -101,7 +101,6 @@ def handle_json_plot(method, question, labels_chain, label_chain, type_chain, da
         
         write_chart_html(chart_type, labels, data, label, chart_description_chain)
 
-# Main function to run the chatbot
 def main():
     load_environment_variables()
 
