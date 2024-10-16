@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total expenses Chart</title>
+    <title>Total expense Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     * {
@@ -86,7 +86,7 @@
 </head>
 <body>
 <div class="title-container">
-    <h1 class="title">Total expenses chart</h1>
+    <h1 class="title">Total expense chart</h1>
 </div>
     <!-- Chart section -->
     <div class="chart-container">
@@ -94,8 +94,8 @@
     </div>
     <script>
         // Data and config from Python
-        const data = {'labels': ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', '2023-11'], 'datasets': [{'data': ['300.0', '120.0', '45.0', '90.0', '55.0', '80.0', '200.0', '75.0', '181.5625', '172.6315789473684', '132.50'], 'backgroundColor': 'rgba(75, 192, 192, 0.5)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
-        const config = {"type": "line", "data": {"labels": ["2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11"], "datasets": [{"data": ["300.0", "120.0", "45.0", "90.0", "55.0", "80.0", "200.0", "75.0", "181.5625", "172.6315789473684", "132.50"], "backgroundColor": "rgba(75, 192, 192, 0.5)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Total expenses"}}}}};
+        const data = {'labels': ['automotive', 'clothing', 'decor', 'electronics', 'entertainment', 'fashion', 'food', 'furniture', 'health', 'home improvement', 'kitchen', 'other', 'pet care', 'sports', 'travel'], 'datasets': [{'data': ['400.0', '650.0', '935.0', '6820.0', '1395.0', '2625.0', '1495.0', '1045.0', '1105.0', '300.0', '1045.0', '280.0', '75.0', '1025.0', '2430.00'], 'backgroundColor': ['rgba(3, 7, 30, 0.5)', 'rgba(55, 6, 23, 0.5)', 'rgba(106, 4, 15, 0.5)', 'rgba(157, 2, 8, 0.5)', 'rgba(208, 0, 0, 0.5)', 'rgba(220, 47, 2, 0.5)', 'rgba(232, 93, 4, 0.5)', 'rgba(244, 140, 6, 0.5)', 'rgba(250, 163, 7, 0.5)', 'rgba(255, 186, 8, 0.5)', 'rgba(3, 7, 30, 0.5)', 'rgba(55, 6, 23, 0.5)', 'rgba(106, 4, 15, 0.5)', 'rgba(157, 2, 8, 0.5)', 'rgba(208, 0, 0, 0.5)'], 'borderColor': ['rgba(3, 7, 30, 1)', 'rgba(55, 6, 23, 1)', 'rgba(106, 4, 15, 1)', 'rgba(157, 2, 8, 1)', 'rgba(208, 0, 0, 1)', 'rgba(220, 47, 2, 1)', 'rgba(232, 93, 4, 1)', 'rgba(244, 140, 6, 1)', 'rgba(250, 163, 7, 1)', 'rgba(255, 186, 8, 1)', 'rgba(3, 7, 30, 1)', 'rgba(55, 6, 23, 1)', 'rgba(106, 4, 15, 1)', 'rgba(157, 2, 8, 1)', 'rgba(208, 0, 0, 1)'], 'borderWidth': 1}]};
+        const config = {"type": "bar", "data": {"labels": ["automotive", "clothing", "decor", "electronics", "entertainment", "fashion", "food", "furniture", "health", "home improvement", "kitchen", "other", "pet care", "sports", "travel"], "datasets": [{"data": ["400.0", "650.0", "935.0", "6820.0", "1395.0", "2625.0", "1495.0", "1045.0", "1105.0", "300.0", "1045.0", "280.0", "75.0", "1025.0", "2430.00"], "backgroundColor": ["rgba(3, 7, 30, 0.5)", "rgba(55, 6, 23, 0.5)", "rgba(106, 4, 15, 0.5)", "rgba(157, 2, 8, 0.5)", "rgba(208, 0, 0, 0.5)", "rgba(220, 47, 2, 0.5)", "rgba(232, 93, 4, 0.5)", "rgba(244, 140, 6, 0.5)", "rgba(250, 163, 7, 0.5)", "rgba(255, 186, 8, 0.5)", "rgba(3, 7, 30, 0.5)", "rgba(55, 6, 23, 0.5)", "rgba(106, 4, 15, 0.5)", "rgba(157, 2, 8, 0.5)", "rgba(208, 0, 0, 0.5)"], "borderColor": ["rgba(3, 7, 30, 1)", "rgba(55, 6, 23, 1)", "rgba(106, 4, 15, 1)", "rgba(157, 2, 8, 1)", "rgba(208, 0, 0, 1)", "rgba(220, 47, 2, 1)", "rgba(232, 93, 4, 1)", "rgba(244, 140, 6, 1)", "rgba(250, 163, 7, 1)", "rgba(255, 186, 8, 1)", "rgba(3, 7, 30, 1)", "rgba(55, 6, 23, 1)", "rgba(106, 4, 15, 1)", "rgba(157, 2, 8, 1)", "rgba(208, 0, 0, 1)"], "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Total expense"}}}}};
         // Render the chart
         const myChart = new Chart(
             document.getElementById('myChart'),
@@ -104,7 +104,7 @@
     </script>
     <!-- Explanation section -->
     <div class="description-container">
-        <p id="chart-description">This line chart displays the total expenses over the first eleven months of 2023. The chart shows a fluctuating trend in expenses, with the highest expenditure recorded in January at $300.0 and the lowest in March at $45.0. The chart also indicates a slight increase in expenses towards the end of the year, with the last month showing a significant increase to $132.50.</p>
+        <p id="chart-description">This bar chart illustrates the total expenses across various categories. The electronics category has the highest expenditure at $6820.0, while pet care has the lowest at $75.0.</p>
     </div>
 </body>
 </html>

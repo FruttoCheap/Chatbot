@@ -125,6 +125,7 @@ def main():
 
     while True:
         question = input("Enter your question ('X' or 'x' to exit): ")
+        question = question.lower().replace("visualize", "give me the chart")
         if question.lower() == 'x':
             exit()
         method = get_classification(question, tagging_chain, PRINT_SETTINGS)
