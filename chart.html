@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total expense Chart</title>
+    <title>Total expenses Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     * {
@@ -86,7 +86,7 @@
 </head>
 <body>
 <div class="title-container">
-    <h1 class="title">Total expense chart</h1>
+    <h1 class="title">Total expenses chart</h1>
 </div>
     <!-- Chart section -->
     <div class="chart-container">
@@ -94,8 +94,8 @@
     </div>
     <script>
         // Data and config from Python
-        const data = {'labels': ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', '2023-11'], 'datasets': [{'data': ['300.0', '120.0', '45.0', '90.0', '55.0', '80.0', '200.0', '75.0', '2905.0', '3280.0', '1855.00'], 'backgroundColor': 'rgba(75, 192, 192, 0.5)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
-        const config = {"type": "line", "data": {"labels": ["2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11"], "datasets": [{"data": ["300.0", "120.0", "45.0", "90.0", "55.0", "80.0", "200.0", "75.0", "2905.0", "3280.0", "1855.00"], "backgroundColor": "rgba(75, 192, 192, 0.5)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Total expense"}}}}};
+        const data = {'labels': ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', '2023-11'], 'datasets': [{'data': ['300.0', '120.0', '45.0', '90.0', '55.0', '80.0', '200.0', '75.0', '181.5625', '172.6315789473684', '132.50'], 'backgroundColor': 'rgba(75, 192, 192, 0.5)', 'borderColor': 'rgba(75, 192, 192, 1)', 'borderWidth': 1}]};
+        const config = {"type": "line", "data": {"labels": ["2023-01", "2023-02", "2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08", "2023-09", "2023-10", "2023-11"], "datasets": [{"data": ["300.0", "120.0", "45.0", "90.0", "55.0", "80.0", "200.0", "75.0", "181.5625", "172.6315789473684", "132.50"], "backgroundColor": "rgba(75, 192, 192, 0.5)", "borderColor": "rgba(75, 192, 192, 1)", "borderWidth": 1}]}, "options": {"plugins": {"legend": {"display": false}}, "responsive": true, "maintainAspectRatio": false, "scales": {"y": {"beginAtZero": true, "title": {"display": true, "text": "Total expenses"}}}}};
         // Render the chart
         const myChart = new Chart(
             document.getElementById('myChart'),
@@ -104,7 +104,7 @@
     </script>
     <!-- Explanation section -->
     <div class="description-container">
-        <p id="chart-description">This line chart displays the total expenses over the first eleven months of 2023. The chart shows a significant increase in expenses in the last three months, with the highest expense recorded in September at $3280.0.</p>
+        <p id="chart-description">This line chart displays the total expenses over the first eleven months of 2023. The chart shows a fluctuating trend in expenses, with the highest expenditure recorded in January at $300.0 and the lowest in March at $45.0. The chart also indicates a slight increase in expenses towards the end of the year, with the last month showing a significant increase to $132.50.</p>
     </div>
 </body>
 </html>

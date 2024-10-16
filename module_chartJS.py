@@ -182,6 +182,7 @@ def get_data_chain():
                      over=for each
                      most_expensive=get_price
                      events=entertainment
+                     "visualize"="give me a chart"
                      Select the prices from the context.
                      Here are the tools available and their descriptions:
                      {rendered_tools}
